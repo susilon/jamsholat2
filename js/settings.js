@@ -58,6 +58,7 @@
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Video List</a></li>' +
       '</ul>';
 
+    var geolocationAvailable = !!(navigator && navigator.geolocation);
     var calculationForm = '<form class="form-calculation">' +
       '<div class="row">' +
       '<div class="col-6">' +
@@ -67,7 +68,9 @@
       '<div class="form-group form-label"><label for="form">Imsak <small><i>(menit sebelum subuh)</i></small></label><input type="text" class="form-control" id="form-imsak" value="' + global.imsak + '"></div>' +
       '</div>' +
       '<div class="col-6">' +
-      '<div class="form-group form-label"><label for="form">Lat, Long</label><input type="text" class="form-control" id="form-latlngdata" value="' + global.latlngdata + '"></div>' +
+      '<div class="form-group form-label"><label for="form">Lat, Long</label>' +
+      '<div class="input-group"><input type="text" class="form-control" id="form-latlngdata" value="' + global.latlngdata + '"><div class="input-group-append"><button type="button" class="btn btn-outline-secondary btn-use-location" ' + (geolocationAvailable ? '' : 'disabled') + ' title="Use current location" aria-label="Use current location"><span aria-hidden="true">📍</span></button></div></div>' +
+      '<small class="form-text text-muted location-status">' + (geolocationAvailable ? 'Use browser location' : 'Geolocation not supported in this browser') + '</small></div>' +
       '<div class="form-group form-label"><label for="form">Sudut Subuh</label><input type="text" class="form-control" id="form-fajrAngle" value="' + global.fajrAngle + '"></div>' +
       '<div class="form-group form-label"><label for="form">Sudut Isya</label><input type="text" class="form-control" id="form-ishaAngle" value="' + global.ishaAngle + '"></div>' +
       '<div class="form-group form-label"><label for="form">Beep Volume</label><input type="range" min="0" max="100" value="' + (global.beep.beepVolume * 100) + '" class="form-control slider" id="form-volume"></div>' +
@@ -76,8 +79,8 @@
       '</form>' +
       '<small><i>For Reference : https://github.com/batoulapps/adhan-js/blob/master/METHODS.md</i><br><b>*Jam komputer saat ini diset di GMT ' + gmtTimeSign + gmtTime + '</b></small>';
 
-    var aboutForm = '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat 2 - Beta</span><br>' +
-      'Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat2.susilon.com<br><br>' +
+    var aboutForm = '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat - Beta</span><br>' +
+      'Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat.susilon.com<br><br>' +
       'Please support your local muslim community.<br>Author : susilonurcahyo@gmail.com';
 
     var creditsForm = 'Adhan js <br>' +
@@ -116,6 +119,30 @@
       if (typeof playBeep === 'function') {
         playBeep('s');
       }
+    });
+
+    $('.form-calculation').on('click', '.btn-use-location', function () {
+      if (!navigator || !navigator.geolocation) {
+        modal.find('.location-status').text('Geolocation is not supported on this browser.');
+        return;
+      }
+
+      modal.find('.location-status').text('Getting current location...');
+      navigator.geolocation.getCurrentPosition(function (position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        var latlng = latitude + ', ' + longitude;
+
+        $('#form-latlngdata').val(latlng);
+        modal.find('.location-status').text('Location updated from device/browser.');
+      }, function (error) {
+        console.warn('Geolocation failed:', error);
+        modal.find('.location-status').text('Unable to get browser location. Please enter coordinates manually.');
+      }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      });
     });
 
     modal.on('hidden.bs.modal', function () {

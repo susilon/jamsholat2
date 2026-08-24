@@ -4,7 +4,7 @@
  alarm
 */
 /*
-Jam Sholat 2 Alpha
+Jam Sholat 2 Beta
 Author : susilonurcahyo@gmail.com
 
 Copyright 2021 Susilo Nurcahyo
@@ -83,8 +83,8 @@ function buildDefaultConfig() {
                 duration: 10
             },
             {
-                title: 'Iklan Jam Sholat 2',
-                content: '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat 2</span><br>Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat2.susilon.com',
+                title: 'Iklan Jam Sholat',
+                content: '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat</span><br>Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat.susilon.com',
                 enable: true,
                 duration: 5
             },
