@@ -14,7 +14,7 @@ services:
       - "traefik.docker.network=frontend"
 
       # Redirect /jamsholat to /jamsholat/ so relative assets resolve correctly
-      - "traefik.http.middlewares.jamsholat-slash.redirectregex.regex=^https?://azure\.susilon\.com/jamsholat$"
+      - 'traefik.http.middlewares.jamsholat-slash.redirectregex.regex=^https?://azure\.susilon\.com/jamsholat$'
       - "traefik.http.middlewares.jamsholat-slash.redirectregex.replacement=https://azure.susilon.com/jamsholat/"
       - "traefik.http.middlewares.jamsholat-slash.redirectregex.permanent=true"
 
