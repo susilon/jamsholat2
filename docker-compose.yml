@@ -13,27 +13,45 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=frontend"
 
-      # Redirect /jamsholat to /jamsholat/ so relative assets resolve correctly
-      - 'traefik.http.middlewares.jamsholat-slash.redirectregex.regex=^https?://azure\.susilon\.com/jamsholat$'
-      - "traefik.http.middlewares.jamsholat-slash.redirectregex.replacement=https://azure.susilon.com/jamsholat/"
-      - "traefik.http.middlewares.jamsholat-slash.redirectregex.permanent=true"
+      # Root host: jamsholat.susilon.com should work without /jamsholat
+      - 'traefik.http.middlewares.jamsholat-no-slash.redirectregex.regex=^https?://jamsholat\.susilon\.com/jamsholat/?$'
+      - "traefik.http.middlewares.jamsholat-no-slash.redirectregex.replacement=https://jamsholat.susilon.com/"
+      - "traefik.http.middlewares.jamsholat-no-slash.redirectregex.permanent=true"
 
-      # HTTP -> HTTPS redirect for the Azure host and /jamsholat path
-      - "traefik.http.routers.jamsholat-http.rule=Host(`azure.susilon.com`) && PathPrefix(`/jamsholat`)"
-      - "traefik.http.routers.jamsholat-http.entrypoints=web"
-      - "traefik.http.routers.jamsholat-http.middlewares=jamsholat-slash@docker,jamsholat-redirect@docker"
+      # Azure host: keep the /jamsholat path and normalize trailing slash
+      - 'traefik.http.middlewares.azure-jamsholat-slash.redirectregex.regex=^https?://azure\.susilon\.com/jamsholat$'
+      - "traefik.http.middlewares.azure-jamsholat-slash.redirectregex.replacement=https://azure.susilon.com/jamsholat/"
+      - "traefik.http.middlewares.azure-jamsholat-slash.redirectregex.permanent=true"
+
+      # HTTP -> HTTPS redirect for both hosts
       - "traefik.http.middlewares.jamsholat-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.jamsholat-redirect.redirectscheme.permanent=true"
 
-      # HTTPS route for the Azure host and /jamsholat path
-      - "traefik.http.routers.jamsholat.rule=Host(`azure.susilon.com`) && PathPrefix(`/jamsholat`)"
+      # jamsholat.susilon.com root only
+      - "traefik.http.routers.jamsholat-http.rule=Host(`jamsholat.susilon.com`) && Path(`/`)"
+      - "traefik.http.routers.jamsholat-http.entrypoints=web"
+      - "traefik.http.routers.jamsholat-http.middlewares=jamsholat-redirect@docker"
+
+      # azure.susilon.com with /jamsholat path
+      - "traefik.http.routers.azure-jamsholat-http.rule=Host(`azure.susilon.com`) && (PathPrefix(`/jamsholat`) || Path(`/`))"
+      - "traefik.http.routers.azure-jamsholat-http.entrypoints=web"
+      - "traefik.http.routers.azure-jamsholat-http.middlewares=azure-jamsholat-slash@docker,jamsholat-redirect@docker"
+
+      # HTTPS routing: jamsholat root host (no /jamsholat allowed)
+      - "traefik.http.routers.jamsholat.rule=Host(`jamsholat.susilon.com`) && Path(`/`)"
       - "traefik.http.routers.jamsholat.entrypoints=websecure"
       - "traefik.http.routers.jamsholat.tls=true"
       - "traefik.http.routers.jamsholat.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.jamsholat.middlewares=jamsholat-slash@docker,jamsholat-strip@docker"
 
-      # Remove the /jamsholat prefix before sending traffic to the nginx container
-      - "traefik.http.middlewares.jamsholat-strip.stripprefix.prefixes=/jamsholat"
+      # HTTPS routing: azure /jamsholat path
+      - "traefik.http.routers.azure-jamsholat.rule=Host(`azure.susilon.com`) && (PathPrefix(`/jamsholat`) || Path(`/`))"
+      - "traefik.http.routers.azure-jamsholat.entrypoints=websecure"
+      - "traefik.http.routers.azure-jamsholat.tls=true"
+      - "traefik.http.routers.azure-jamsholat.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.azure-jamsholat.middlewares=azure-jamsholat-slash@docker,azure-jamsholat-strip@docker"
+
+      # Remove /jamsholat prefix before sending traffic to nginx for Azure host
+      - "traefik.http.middlewares.azure-jamsholat-strip.stripprefix.prefixes=/jamsholat"
       - "traefik.http.services.jamsholat.loadbalancer.server.port=80"
 
 networks:
