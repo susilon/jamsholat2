@@ -13,21 +13,21 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=frontend"
 
-      # HTTP -> HTTPS redirect
-      - "traefik.http.routers.jamsholat-http.rule=Host(`www.susilon.com`) && PathPrefix(`/jamsholat`)"
+      # HTTP -> HTTPS redirect for the Azure host and /jamsholat path
+      - "traefik.http.routers.jamsholat-http.rule=Host(`azure.susilon.com`) && PathPrefix(`/jamsholat`)"
       - "traefik.http.routers.jamsholat-http.entrypoints=web"
       - "traefik.http.routers.jamsholat-http.middlewares=jamsholat-redirect@docker"
       - "traefik.http.middlewares.jamsholat-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.jamsholat-redirect.redirectscheme.permanent=true"
 
-      # HTTPS route
-      - "traefik.http.routers.jamsholat.rule=Host(`www.susilon.com`) && PathPrefix(`/jamsholat`)"
+      # HTTPS route for the Azure host and /jamsholat path
+      - "traefik.http.routers.jamsholat.rule=Host(`azure.susilon.com`) && PathPrefix(`/jamsholat`)"
       - "traefik.http.routers.jamsholat.entrypoints=websecure"
       - "traefik.http.routers.jamsholat.tls=true"
       - "traefik.http.routers.jamsholat.tls.certresolver=letsencrypt"
       - "traefik.http.routers.jamsholat.middlewares=jamsholat-strip@docker"
 
-      # Strip /jamsholat before forwarding to Nginx
+      # Remove the /jamsholat prefix before sending traffic to the nginx container
       - "traefik.http.middlewares.jamsholat-strip.stripprefix.prefixes=/jamsholat"
       - "traefik.http.services.jamsholat.loadbalancer.server.port=80"
 
