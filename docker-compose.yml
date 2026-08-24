@@ -13,10 +13,15 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=frontend"
 
+      # Redirect /jamsholat to /jamsholat/ so relative assets resolve correctly
+      - "traefik.http.middlewares.jamsholat-slash.redirectregex.regex=^https?://azure\.susilon\.com/jamsholat$"
+      - "traefik.http.middlewares.jamsholat-slash.redirectregex.replacement=https://azure.susilon.com/jamsholat/"
+      - "traefik.http.middlewares.jamsholat-slash.redirectregex.permanent=true"
+
       # HTTP -> HTTPS redirect for the Azure host and /jamsholat path
       - "traefik.http.routers.jamsholat-http.rule=Host(`azure.susilon.com`) && PathPrefix(`/jamsholat`)"
       - "traefik.http.routers.jamsholat-http.entrypoints=web"
-      - "traefik.http.routers.jamsholat-http.middlewares=jamsholat-redirect@docker"
+      - "traefik.http.routers.jamsholat-http.middlewares=jamsholat-slash@docker,jamsholat-redirect@docker"
       - "traefik.http.middlewares.jamsholat-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.jamsholat-redirect.redirectscheme.permanent=true"
 
@@ -25,7 +30,7 @@ services:
       - "traefik.http.routers.jamsholat.entrypoints=websecure"
       - "traefik.http.routers.jamsholat.tls=true"
       - "traefik.http.routers.jamsholat.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.jamsholat.middlewares=jamsholat-strip@docker"
+      - "traefik.http.routers.jamsholat.middlewares=jamsholat-slash@docker,jamsholat-strip@docker"
 
       # Remove the /jamsholat prefix before sending traffic to the nginx container
       - "traefik.http.middlewares.jamsholat-strip.stripprefix.prefixes=/jamsholat"
