@@ -1,7 +1,11 @@
-var modal = $('#settingsModal');
-modal.on('shown.bs.modal', function() {
-  $(document).off('focusin.modal');
-});
+(function () {
+  'use strict';
+
+  var modal = $('#settingsModal');
+
+  modal.on('shown.bs.modal', function () {
+    $(document).off('focusin.modal');
+  });
 
   function resetModal() {
     modal.off('click');
@@ -194,340 +198,285 @@ modal.on('shown.bs.modal', function() {
       applyScreenZoom(global.screenZoom);
       saveSettings();
 
-    if (callback !=null) {
-      callback();
-    }
+      if (typeof callback === 'function') {
+        callback();
+      }
 
-    modal.modal('hide');
-    playBeep('d');
-    $('.form-calculation').off();
-  });
+      modal.modal('hide');
+      if (typeof playBeep === 'function') {
+        playBeep('d');
+      }
+      $('.form-calculation').off();
+    });
 
-  modal.on('click', '.btn-videolist-add', function() {
-    console.log('add video');
-    modal.find(".list-new-video").show();
-    modal.find("#new-video").focus();
-  });
+    modal.on('click', '.btn-videolist-add', function () {
+      modal.find('.list-new-video').show();
+      modal.find('#new-video').focus();
+    });
 
-  modal.on('click', '.btn-videolist-save', function() {    
-    global.videolist.push(modal.find("#new-video").val());
-    console.log(global.videolist);
-    var videoListForm = generateVideoList();
-    modal.find("#pills-videolist").html(videoListForm);
-    modal.find(".list-new-video").hide();
-  });
+    modal.on('click', '.btn-videolist-save', function () {
+      var newVideo = modal.find('#new-video').val();
+      if (!newVideo) {
+        return;
+      }
 
-  modal.on('click', '.btn-videolist-remove', function() {
-    console.log('remove video ' + $(this).attr("data-value"));
-    var removeIndex = global.videolist.indexOf($(this).attr("data-value"));  
-    global.videolist.splice(removeIndex, 1);
-    var videoListForm = generateVideoList();
-    modal.find("#pills-videolist").html(videoListForm);
-    modal.find(".list-new-video").hide();
-  });
+      global.videolist.push(newVideo);
+      modal.find('#pills-videolist').html(generateVideoList());
+      modal.find('.list-new-video').hide();
+    });
 
-  modal.find(".list-new-video").hide();
-}
+    modal.on('click', '.btn-videolist-remove', function () {
+      var removeValue = $(this).attr('data-value');
+      var removeIndex = global.videolist.indexOf(removeValue);
+      if (removeIndex >= 0) {
+        global.videolist.splice(removeIndex, 1);
+      }
+      modal.find('#pills-videolist').html(generateVideoList());
+      modal.find('.list-new-video').hide();
+    });
 
-function generateVideoList() {
-  var videolistgroup = `<ul class="list-group">
-  <li class="list-group-item list-new-video"><span class="float-left w-50">
-  <input type="text" class="form-control" id="new-video">
-  </span><button class="btn btn-sm btn-success float-right btn-videolist-save">Simpan</button></li>`;
-  $.each(global.videolist, function(vlidx, vlitem) {
-    videolistgroup += `<li class="list-group-item"><span class="float-left">${ vlitem }</span><button class="btn btn-sm btn-danger float-right btn-videolist-remove" data-value="${ vlitem }">Hapus</button></li>`;
-  });  
-  videolistgroup += `</ul>`;
+    modal.find('.list-new-video').hide();
+    modal.modal('show');
 
-  var videoListForm = `Background Video List<br><small>Copy file video MP4 ke folder videos untuk menambahkan video, <br>
-  kemudian klik tombol Tambah, dan masukkan nama file, kemudian klik tombol Simpan dan Save changes<br><br>
-  ${ videolistgroup }<br>
-  <button class="btn btn-sm btn-primary btn-videolist-add">Tambah</button></small>`;
+    setTimeout(function () {
+      $('#form-value').focus();
+    }, 500);
+  }
 
-  return videoListForm;
-}
+  function showSettingsLabel(me, target, callback) {
+    resetModal();
+    var label = $(me).attr('data-label');
+    var form = '<form><div class="form-group form-label"><label for="form">Label ' + label + '</label><input type="text" class="form-control" id="form-value" value="' + $(me).attr('data-value') + '"></div></form>';
 
-function showSettingsLabel(me, target, callback) {
-  resetModal();
-  var label = $(me).attr('data-label');
-  var form = '<form> \
-  <div class="form-group form-label"> \
-    <label for="form">Label ' + label + '</label> \
-    <input type="text" class="form-control" id="form-value" value="' + $(me).attr('data-value') + '"> \
-  </div></form>';
-  modal.find('.modal-title').text('Setting Label ' + label);
-  modal.find('.modal-body').html(form);
-  modal.find('.modal-save').click(function() {    
-    var value = $('#form-value').val();
-    $(target).text(value);
-    $(me).attr('data-value', value);
+    modal.find('.modal-title').text('Setting Label ' + label);
+    modal.find('.modal-body').html(form);
+    modal.find('.modal-save').click(function () {
+      var value = $('#form-value').val();
+      $(target).text(value);
+      $(me).attr('data-value', value);
 
-    if (callback !=null) {
-      callback(value);
-    }
+      if (typeof callback === 'function') {
+        callback(value);
+      }
 
-    modal.modal('hide');
-  });
-  modal.modal('show');
-  setTimeout(function() {    
-    $('#form-value').focus();
-  }, 500); 
-}
+      modal.modal('hide');
+    });
+    modal.modal('show');
 
-function showSettingsWaktuSholat(me) {
-  resetModal();
-  var label = $(me).find('.time-label').attr('data-label');
-  var config = global.prayer[label];
-  if (!config) {
-    config = {
+    setTimeout(function () {
+      $('#form-value').focus();
+    }, 500);
+  }
+
+  function showSettingsWaktuSholat(me) {
+    resetModal();
+    var label = $(me).find('.time-label').attr('data-label');
+    var config = global.prayer[label] || {
       label: label,
       iqomah: global.iqomahtime,
       adjustment: global.minuteadjustment,
+      duration: 0
+    };
+
+    var form = '<form><div class="form-group form-label"><label for="form">Label ' + label + '</label><input type="text" class="form-control" id="form-label" value="' + config.label + '"></div>';
+
+    if (label !== 'Terbit') {
+      form += '<div class="form-group form-iqomah"><label for="form">Waktu Iqomah (menit, setelah adzan)</label><input type="text" class="form-control" id="form-iqomah" value="' + config.iqomah + '"></div>';
     }
-  }
-  var form = '<form> \
-  <div class="form-group form-label"> \
-    <label for="form">Label ' + label + '</label> \
-    <input type="text" class="form-control" id="form-label" value="' + config.label + '"> \
-  </div> ';
 
-  if (label != 'Terbit') {
-    form += '<div class="form-group form-iqomah"> \
-    <label for="form">Waktu Iqomah (menit, setelah adzan)</label> \
-    <input type="text" class="form-control" id="form-iqomah" value="' + config.iqomah + '"></div> ';
-  }
+    form += '<div class="form-group form-adjustment"><label for="form">Adjustment Waktu (menit)</label><input type="text" class="form-control" id="form-adjustment" value="' + config.adjustment + '"></div>' +
+      '<div class="form-group form-adjustment"><label for="form">Durasi Sholat (menit, layar off)</label><input type="text" class="form-control" id="form-duration" value="' + config.duration + '"></div></form>';
 
-  form += '<div class="form-group form-adjustment"> \
-  <label for="form">Adjustment Waktu (menit)</label> \
-  <input type="text" class="form-control" id="form-adjustment" value="' + config.adjustment + '"></div> \
-<div class="form-group form-adjustment"> \
-  <label for="form">Durasi Sholat (menit, layar off)</label> \
-  <input type="text" class="form-control" id="form-duration" value="' + config.duration + '"> </div> \
-</form>';
-  modal.find('.modal-title').text('Setting Waktu ' + label);
-  modal.find('.modal-body').html(form);
-  modal.find('.modal-save').click(function() {
-    $(me).find('.time-label').text($('#form-label').val());
-    var timeSettings = {
-      label: $('#form-label').val(),
-      iqomah: parseInt($('#form-iqomah').val()),
-      adjustment: parseInt($('#form-adjustment').val()),
-      duration: parseInt($('#form-duration').val()),
-    };    
-    global.prayer[label] = timeSettings;
-    saveSettings();
+    modal.find('.modal-title').text('Setting Waktu ' + label);
+    modal.find('.modal-body').html(form);
+    modal.find('.modal-save').click(function () {
+      $(me).find('.time-label').text($('#form-label').val());
 
-    modal.modal('hide');
-  });
-  modal.modal('show');
-  setTimeout(function() {    
-    $('#form-iqomah').focus();
-  }, 500); 
-}
+      var timeSettings = {
+        label: $('#form-label').val(),
+        iqomah: parseInt($('#form-iqomah').val(), 10) || 0,
+        adjustment: parseInt($('#form-adjustment').val(), 10) || 0,
+        duration: parseInt($('#form-duration').val(), 10) || 0
+      };
 
-function showSettingsInfotext(me) {
-  resetModal();
-  var data = global.infotextdata;  
-  var editor;
-  CKEDITOR.on('instanceReady', function(ev) {
-      editor = ev.editor;
-  });
-
-  modal.find('.modal-title').text('Setting Info');
-  modal.find('.modal-body').html(getInfoTextList(data));
-
-  $('.modal-body').off('click','.infotext-item');
-  $('.modal-body').on('click','.infotext-item',function() {    
-    var index = $(this).attr('data-index');
-    var itemdata = data[index];     
-
-    $('.form-infotext').off();
-    modal.find('.modal-body').html(getInfoTextForm(itemdata, index));
-    $('.form-infotext').on('click','.btn-cancel',function() {      
-      modal.find('.modal-body').html(getInfoTextList(data));
-      if (editor) {
-        editor.destroy();
-      }
+      global.prayer[label] = timeSettings;
+      saveSettings();
+      modal.modal('hide');
     });
-    $('.form-infotext').on('click','.btn-save',function() {      
-      itemdata.title = $('.form-infotext').find('.form-title').val();
-      itemdata.content = $('.form-infotext').find('.form-content').html();
-      itemdata.enable = $('.form-infotext').find('.form-enable').is(":checked");
-      itemdata.duration = $('.form-infotext').find('.form-duration').val();
-      data[index] = itemdata;
-      modal.find('.modal-body').html(getInfoTextList(data));
-      if (editor) { 
-        editor.destroy();
+    modal.modal('show');
+
+    setTimeout(function () {
+      $('#form-iqomah').focus();
+    }, 500);
+  }
+
+  function getInfoTextList(data) {
+    var list = '<div class="list-group infotext-list">';
+
+    $.each(data, function (index, value) {
+      var isActive = value.enable ? 'Active' : 'Not Active';
+      var badgeClass = value.enable ? 'badge-primary' : 'badge-default';
+
+      if (index === 7) {
+        list += '<button type="button" class="list-group-item list-group-item-action infotext-item" data-index="' + index + '">' + value.title + ' <small class="float-right"><i>(hanya muncul saat dzuhur di hari jumat)</i></small></button>';
+      } else {
+        list += '<button type="button" class="list-group-item list-group-item-action infotext-item" data-index="' + index + '">' + value.title + ' <span class="badge ' + badgeClass + ' badge-pill float-right btn-setactive">' + isActive + '</span></button>';
       }
     });
 
-    $('#text-editor').attr('contenteditable', true);       
-    CKEDITOR.inline('text-editor', {
-      // Allow some non-standard markup that we used in the introduction.
-      extraAllowedContent: 'a(documentation);abbr[title];code',
-      removePlugins: 'stylescombo',
-      extraPlugins: 'sourcedialog',
-    });    
-  });
+    list += '</div>';
+    return list;
+  }
 
-  modal.find('.modal-save').click(function() {
-    global.infotextdata = data;
-    saveSettings();        
+  function getInfoTextForm(data, index) {
+    var isChecked = data.enable ? 'checked' : '';
+    var form = '<form class="form-infotext"><div class="row"><div class="col-6"><div class="form-group form-label"><label for="form">Judul Info</label><input type="text" class="form-control form-title" value="' + data.title + '"></div></div>' +
+      '<div class="col-3"><div class="form-group form-label"><label for="form">Durasi Tayang (detik)</label><input type="text" class="form-control form-duration" value="' + data.duration + '"></div></div>' +
+      '<div class="col-3"><div class="form-group form-label"><label for="form">Set Aktif/Non Aktif</label><div class="form-check"><input class="form-check-input form-enable" type="checkbox" value="' + data.enable + '" id="setActive" ' + isChecked + '><label class="form-check-label" for="setActive">Set Active</label></div></div></div></div>';
 
-    modal.modal('hide');
-  });
-
-  modal.on('hidden.bs.modal', function () {
-    if (editor) {      
-      editor.destroy();
-    }    
-  })
-
-  modal.modal('show');
-}
-
-function getInfoTextList(data) {
-  var list = '<div class="list-group infotext-list">';
-  $.each(data, function( index, value ) {
-    var isactive = value.enable?'Active':'Not Active';
-    var infoactive = value.enable?'badge-primary':'badge-default';
-    if (index == 7) {
-      list += '<button type="button" class="list-group-item list-group-item-action infotext-item" data-index="' + index + '">'+value.title+' <small class="float-right"><i>(hanya muncul saat dzuhur di hari jumat)</i></small></button>';
-    } else {
-      list += '<button type="button" class="list-group-item list-group-item-action infotext-item" data-index="' + index + '">'+value.title+' <span class="badge '+infoactive+' badge-pill float-right btn-setactive">'+isactive+'</span></button>';  
-    }    
-  });  
-  list += '</div>';
-  return list;
-}
-
-function getInfoTextForm(data, index) {  
-  var ischecked = data.enable?'checked':'';  
-  var form = '<form class="form-infotext"> \
-  <div class="row"> \
-  <div class="col-6"><div class="form-group form-label"> \
-    <label for="form">Judul Info</label> \
-    <input type="text" class="form-control form-title" value="' + data.title + '"> \
-  </div> </div> \
-  <div class="col-3"> <div class="form-group form-label"> \
-    <label for="form">Durasi Tayang (detik)</label> \
-    <input type="text" class="form-control form-duration" value="' + data.duration + '"> \
-  </div> </div>\
-  <div class="col-3"> <div class="form-group form-label"> \
-    <label for="form">Set Aktif/Non Aktif</label> \
-  <div class="form-check"> \
-      <input class="form-check-input form-enable" type="checkbox" value="'+data.enable+'" id="setActive" '+ischecked+'> \
-    <label class="form-check-label" for="setActive"> \
-      Set Active \
-    </label> \
-  </div></div></div> \
-  </div>';
-  if (index == 7){
-    form = '<form class="form-infotext"><div class="form-group"> \
-    Info Khusus Saat Khotbah Jum\'at\
-  </div>';
-  } 
-  form += '<div class="form-group"> \
-    <div class="form-content" id="text-editor">' + data.content + '</div> \
-  </div> \
-  <div class="form-group form-label mt-3"> \
-    <button type="button" class="btn btn-default btn-cancel">Cancel</button> \
-    <button type="button" class="btn btn-primary btn-save">Save Info</button> \
-  </div> \
-  </form>';
-  return form;
-}
-
-function showSettingsScrollText(me, callback) {
-  resetModal();
-  /*
-  if ($(me).attr('data-width')=="100%") {
-    var selectContent = "";
-    var selectContainer = "selected";
-  } else {
-    var selectContent = "selected";
-    var selectContainer = "";
-  }*/
-  var form = '<form> \
-  <div class="form-group form-label"> \
-    <label for="form">Scrolling Text</label> \
-    <textarea class="form-control" id="form-value">' + $(me).attr('data-value') + '</textarea> \
-  </div> \
-  <div class="form-group form-label"> \
-    <label for="form">Scrolling Text Saat Sholat Berlangsung</label> \
-    <textarea class="form-control" id="form-value-onpray">' + $(me).attr('data-value-onpray') + '</textarea> \
-  </div> \
-  <div class="row">\
-  <div class="form-group form-label col-6"> \
-    <label for="form">Speed </label> \
-    <input type="range" min="1" max="9" value="' + global.scrollingdata.speed + '" class="form-control slider" id="form-speed">\
-  </div></form>';
-/*
-  '<div class="form-group form-label col-6"> \
-    <label for="form">Lebar </label> \
-    <select class="form-control" id="form-width"><option value="" ' + selectContent + '>Content</option><option value="100%" ' + selectContainer + '>Container</option></select> \
-    </div> </div></form>';*/
-  modal.find('.modal-title').text('Setting Scrolling Text');
-  modal.find('.modal-body').html(form);
-  modal.find('.modal-save').click(function() {    
-    var value = $('#form-value').val();
-    var valueonpray = $('#form-value-onpray').val();
-    var speed = $('#form-speed').val();
-    var width = $('#form-width').val();    
-    $(me).attr('data-value', value);
-    $(me).attr('data-value-onpray', valueonpray);
-    $(me).attr('data-speed', speed);
-    $(me).attr('data-width', width);
-
-    var scrollingdata = {value:value,valueOnPray:valueonpray,speed:speed,width:width};
-
-    if (callback !=null) {
-      callback(scrollingdata);
+    if (index === 7) {
+      form = '<form class="form-infotext"><div class="form-group">Info Khusus Saat Khotbah Jum\'at</div>';
     }
 
-    global.scrollingdata = scrollingdata;
-    saveSettings();
+    form += '<div class="form-group"><div class="form-content" id="text-editor">' + data.content + '</div></div>' +
+      '<div class="form-group form-label mt-3"><button type="button" class="btn btn-default btn-cancel">Cancel</button><button type="button" class="btn btn-primary btn-save">Save Info</button></div></form>';
 
-    modal.modal('hide');
-  });
-  modal.modal('show');
-  setTimeout(function() {    
-    $('#form-value').focus();
-  }, 500); 
-}
-
-function saveSettings() {
-  localStorage.configuration = JSON.stringify(global);
-}
-
-$('.nama').click(function() {
-  showSettingsLabel(this, this, function(value) {
-    global.namamasjid = value;
-    saveSettings()
-  });
-});
-
-$('.alamat').click(function() {
-  showSettingsLabel(this, this, function(value) {
-    global.alamatmasjid = value;
-    saveSettings()
-  });
-});
-
-$('.info').click(function() {
-  showSettingsInfotext(this);
-});
-
-$('.time-box').click(function() {
-  if($(this).find('.time-label').attr('data-label') != "Imsak") {
-    showSettingsWaktuSholat(this);
+    return form;
   }
-});
 
-$('.marquee-container').click(function() {
-  console.log('marquee');  
-  showSettingsScrollText(this, setScrollingText);
-});
+  function showSettingsInfotext() {
+    resetModal();
+    var data = global.infotextdata;
+    var editor;
+
+    CKEDITOR.on('instanceReady', function (event) {
+      editor = event.editor;
+    });
+
+    modal.find('.modal-title').text('Setting Info');
+    modal.find('.modal-body').html(getInfoTextList(data));
+
+    $('.modal-body').off('click', '.infotext-item');
+    $('.modal-body').on('click', '.infotext-item', function () {
+      var index = $(this).attr('data-index');
+      var itemData = data[index];
+
+      $('.form-infotext').off();
+      modal.find('.modal-body').html(getInfoTextForm(itemData, Number(index)));
+
+      $('.form-infotext').on('click', '.btn-cancel', function () {
+        modal.find('.modal-body').html(getInfoTextList(data));
+        if (editor && !editor.destroyed) {
+          editor.destroy();
+        }
+      });
+
+      $('.form-infotext').on('click', '.btn-save', function () {
+        itemData.title = $('.form-infotext').find('.form-title').val();
+        itemData.content = $('.form-infotext').find('.form-content').html();
+        itemData.enable = $('.form-infotext').find('.form-enable').is(':checked');
+        itemData.duration = $('.form-infotext').find('.form-duration').val();
+        data[index] = itemData;
+        modal.find('.modal-body').html(getInfoTextList(data));
+
+        if (editor && !editor.destroyed) {
+          editor.destroy();
+        }
+      });
+
+      $('#text-editor').attr('contenteditable', true);
+      CKEDITOR.inline('text-editor', {
+        extraAllowedContent: 'a(documentation);abbr[title];code',
+        removePlugins: 'stylescombo',
+        extraPlugins: 'sourcedialog'
+      });
+    });
+
+    modal.find('.modal-save').click(function () {
+      global.infotextdata = data;
+      saveSettings();
+      modal.modal('hide');
+    });
+
+    modal.on('hidden.bs.modal', function () {
+      if (editor && !editor.destroyed) {
+        editor.destroy();
+      }
+    });
+
+    modal.modal('show');
+  }
+
+  function showSettingsScrollText(me, callback) {
+    resetModal();
+    var form = '<form>' +
+      '<div class="form-group form-label"><label for="form">Scrolling Text</label><textarea class="form-control" id="form-value">' + $(me).attr('data-value') + '</textarea></div>' +
+      '<div class="form-group form-label"><label for="form">Scrolling Text Saat Sholat Berlangsung</label><textarea class="form-control" id="form-value-onpray">' + $(me).attr('data-value-onpray') + '</textarea></div>' +
+      '<div class="row"><div class="form-group form-label col-6"><label for="form">Speed</label><input type="range" min="1" max="9" value="' + global.scrollingdata.speed + '" class="form-control slider" id="form-speed"></div></div></form>';
+
+    modal.find('.modal-title').text('Setting Scrolling Text');
+    modal.find('.modal-body').html(form);
+    modal.find('.modal-save').click(function () {
+      var value = $('#form-value').val();
+      var valueOnPray = $('#form-value-onpray').val();
+      var speed = $('#form-speed').val();
+      var width = $(me).attr('data-width') || '100%';
+
+      $(me).attr('data-value', value);
+      $(me).attr('data-value-onpray', valueOnPray);
+      $(me).attr('data-speed', speed);
+      $(me).attr('data-width', width);
+
+      var scrollingData = {
+        value: value,
+        valueOnPray: valueOnPray,
+        speed: speed,
+        width: width
+      };
+
+      if (typeof callback === 'function') {
+        callback(scrollingData);
+      }
+
+      global.scrollingdata = scrollingData;
+      saveSettings();
+      modal.modal('hide');
+    });
+    modal.modal('show');
+
+    setTimeout(function () {
+      $('#form-value').focus();
+    }, 500);
+  }
+
+  function bindElementInteractions() {
+    $('.nama').off('click').on('click', function () {
+      showSettingsLabel(this, this, function (value) {
+        global.namamasjid = value;
+        saveSettings();
+      });
+    });
+
+    $('.alamat').off('click').on('click', function () {
+      showSettingsLabel(this, this, function (value) {
+        global.alamatmasjid = value;
+        saveSettings();
+      });
+    });
+
+    $('.info').off('click').on('click', function () {
+      showSettingsInfotext(this);
+    });
+
+    $('.time-box').off('click').on('click', function () {
+      if ($(this).find('.time-label').attr('data-label') !== 'Imsak') {
+        showSettingsWaktuSholat(this);
+      }
+    });
+
+    $('.marquee-container').off('click').on('click', function () {
+      showSettingsScrollText(this, setScrollingText);
+    });
 
     $('.datetime').off('click').on('click', function () {
       showGeneralSettings(function () {
