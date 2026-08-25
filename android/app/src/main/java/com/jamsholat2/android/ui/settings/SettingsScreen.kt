@@ -736,9 +736,9 @@ fun SettingsScreen(
                             }
                             "video" -> item {
                                 SettingsSection(title = "Latar Belakang") {
-                                    Text("Video & Gambar Latar", style = MaterialTheme.typography.titleMedium)
+                                    //Text("Video & Gambar Latar", style = MaterialTheme.typography.titleMedium)
                                     Text(
-                                        "Pilih video/gambar dari penyimpanan. File akan dicopy ke folder internal (videos/images) dan ditampilkan bergantian. Video sesuai durasi, gambar 10 detik. Saat waktu sholat latar menjadi hitam.",
+                                        "Pilih video/gambar dari penyimpanan. File akan dicopy ke folder internal (videos/images) dan ditampilkan bergantian. Video sesuai durasi, gambar 10 detik. Saat waktu sholat latar akan dinonaktifkan untuk kekhusukan sholat.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray
                                     )
@@ -881,11 +881,13 @@ fun SettingsScreen(
                                     }
                                     Spacer(Modifier.height(8.dp))
                                     HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+                                    /*
                                     Spacer(Modifier.height(8.dp))
                                     Text("Catatan:", style = MaterialTheme.typography.labelSmall, color = Color(0xFF90CAF9))
                                     Text("• File dicopy ke ${context.filesDir}/videos atau /images", style = MaterialTheme.typography.bodySmall, fontSize = 10.sp, color = Color.Gray)
                                     Text("• Latar berganti otomatis sesuai list", style = MaterialTheme.typography.bodySmall, fontSize = 10.sp, color = Color.Gray)
                                     Text("• Saat sholat (isPraying) latar hitam", style = MaterialTheme.typography.bodySmall, fontSize = 10.sp, color = Color.Gray)
+                                    */
                                 }
                             }
                         }
