@@ -35,6 +35,67 @@ var audioCtx = null;
 var beepCtr = 0;
 var beepHandler = null;
 var infoCtr = 0;
+var backgroundMediaDbPromise = null;
+
+function openBackgroundMediaDb() {
+    if (!window.indexedDB) {
+        return Promise.reject(new Error('IndexedDB is not supported'));
+    }
+    if (!backgroundMediaDbPromise) {
+        backgroundMediaDbPromise = new Promise(function (resolve, reject) {
+            var request = window.indexedDB.open('jamsholat-media', 1);
+            request.onupgradeneeded = function () {
+                request.result.createObjectStore('backgrounds', { keyPath: 'id' });
+            };
+            request.onsuccess = function () { resolve(request.result); };
+            request.onerror = function () { reject(request.error); };
+        });
+    }
+    return backgroundMediaDbPromise;
+}
+
+function saveLocalBackground(file) {
+    return openBackgroundMediaDb().then(function (db) {
+        var id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+        return new Promise(function (resolve, reject) {
+            var transaction = db.transaction('backgrounds', 'readwrite');
+            transaction.objectStore('backgrounds').put({
+                id: id,
+                name: file.name,
+                type: file.type,
+                blob: file,
+                createdAt: Date.now()
+            });
+            transaction.oncomplete = function () { resolve({ id: id, name: file.name, type: file.type }); };
+            transaction.onerror = function () { reject(transaction.error); };
+        });
+    });
+}
+
+function getLocalBackground(id) {
+    return openBackgroundMediaDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            var request = db.transaction('backgrounds', 'readonly').objectStore('backgrounds').get(id);
+            request.onsuccess = function () { resolve(request.result || null); };
+            request.onerror = function () { reject(request.error); };
+        });
+    });
+}
+
+function deleteLocalBackground(id) {
+    return openBackgroundMediaDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            var transaction = db.transaction('backgrounds', 'readwrite');
+            transaction.objectStore('backgrounds').delete(id);
+            transaction.oncomplete = resolve;
+            transaction.onerror = function () { reject(transaction.error); };
+        });
+    });
+}
+
+window.saveLocalBackground = saveLocalBackground;
+window.getLocalBackground = getLocalBackground;
+window.deleteLocalBackground = deleteLocalBackground;
 
 if (global === null) {
     firstInstallation = true;
@@ -541,18 +602,44 @@ function initializeDisplay() {
     var backgroundCtr = 0;
     var imageTimer;
     var fadeTimer;
+    var backgroundRequest = 0;
+    var currentObjectUrl = null;
 
     function isImageBackground(item) {
-        return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(item) ||
-            (/^https?:\/\//i.test(item) && !isVideoBackground(item));
+        if (item && item.localType === 'image') {
+            return true;
+        }
+        var name = typeof item === 'string' ? item : item && item.name || '';
+        return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(name) ||
+            (/^https?:\/\//i.test(name) && !isVideoBackground(item));
     }
 
     function isVideoBackground(item) {
-        return /\.(mp4|m4v|webm|mov)(\?.*)?$/i.test(item) || /\/download\/video(?:\/|$)/i.test(item);
+        if (item && item.localType === 'video') {
+            return true;
+        }
+        var name = typeof item === 'string' ? item : item && item.name || '';
+        return /\.(mp4|m4v|webm|mov)(\?.*)?$/i.test(name) || /\/download\/video(?:\/|$)/i.test(name);
     }
 
     function getBackgroundSource(item) {
-        return /^https?:\/\//i.test(item) ? item : 'videos/' + item;
+        if (item && item.localId) {
+            return getLocalBackground(item.localId).then(function (record) {
+                if (!record) {
+                    throw new Error('Stored background not found');
+                }
+                return { source: URL.createObjectURL(record.blob), objectUrl: true };
+            });
+        }
+        var name = typeof item === 'string' ? item : item && item.name || '';
+        return Promise.resolve({ source: /^https?:\/\//i.test(name) ? name : 'videos/' + name, objectUrl: false });
+    }
+
+    function releaseCurrentObjectUrl() {
+        if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+            currentObjectUrl = null;
+        }
     }
 
     function showNextBackground() {
@@ -563,8 +650,15 @@ function initializeDisplay() {
         }
 
         var item = backgroundItems[backgroundCtr];
-        var source = getBackgroundSource(item);
         backgroundCtr = (backgroundCtr + 1) % backgroundItems.length;
+        var request = ++backgroundRequest;
+
+        getBackgroundSource(item).then(function (sourceData) {
+        if (request !== backgroundRequest) {
+            if (sourceData.objectUrl) URL.revokeObjectURL(sourceData.source);
+            return;
+        }
+        var source = sourceData.source;
 
         if (isImageBackground(item)) {
             if (videoPlayer) {
@@ -575,6 +669,8 @@ function initializeDisplay() {
             if (imagePlayer) {
                 imagePlayer.onerror = showNextBackground;
                 imagePlayer.onload = function () {
+                    releaseCurrentObjectUrl();
+                    if (sourceData.objectUrl) currentObjectUrl = source;
                     imagePlayer.style.opacity = '1';
                     if (videoPlayer) {
                         fadeTimer = setTimeout(function () {
@@ -613,6 +709,8 @@ function initializeDisplay() {
             };
             videoPlayer.onerror = showNextBackground;
             videoPlayer.oncanplay = function () {
+                releaseCurrentObjectUrl();
+                if (sourceData.objectUrl) currentObjectUrl = source;
                 videoPlayer.style.display = 'block';
                 videoPlayer.style.opacity = '1';
                 if (imagePlayer) {
@@ -630,6 +728,10 @@ function initializeDisplay() {
             videoPlayer.play().catch(function () {});
             console.log('playing ' + source + ' until it ends');
         }
+        }).catch(function (error) {
+            console.warn('Unable to load background:', error);
+            showNextBackground();
+        });
     }
 
     showNextBackground();
