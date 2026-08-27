@@ -1,9 +1,4 @@
 /*
- TODO :
- video play list settings
- alarm
-*/
-/*
 Jam Sholat 2 Beta ver 270826 
 Author : susilonurcahyo@gmail.com
 
@@ -506,6 +501,7 @@ function setPrayerTimes() {
         if (current !== 'sunrise') {
             if (!global.isiqomah) {
                 global.isiqomah = true;
+                $('.hide-onpray').css('display', 'none');
                 playBeep('m');
                 setScrollingText(global.scrollingdata);
             } else {
