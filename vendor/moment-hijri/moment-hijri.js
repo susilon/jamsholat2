@@ -252,16 +252,16 @@
 	extend(getPrototypeOf(moment.localeData()), {
 		_iMonths: ['Muharram'
                 , 'Safar'
-                , 'Rabi\' al-Awwal'
-                , 'Rabi\' al-Thani'
-                , 'Jumada al-Ula'
-                , 'Jumada al-Alkhirah'
+                , `Rabi'ul-Awal`
+                , `Rabi'ul-Akhir`
+                , 'Jumadil-Awal'
+                , 'Jumadil-Akhir'
                 , 'Rajab'
-                , 'Sha’ban'
+                , `Sya'ban`
                 , 'Ramadhan'
-                , 'Shawwal'
-                , 'Thul-Qi’dah'
-                , 'Thul-Hijjah'
+                , 'Syawwal'
+                , `Dzulqodah`
+                , `Dzulhijjah`
                 ],
 		iMonths: function (m) {
 			return this._iMonths[m.iMonth()]
@@ -277,9 +277,9 @@
                       , 'Raj'
                       , 'Sha'
                       , 'Ram'
-                      , 'Shw'
-                      , 'Dhu-Q'
-                      , 'Dhu-H'
+                      , 'Sya'
+                      , 'Dzul-Q'
+                      , 'Dzul-H'
                       ],
 		iMonthsShort: function (m) {
 			return this._iMonthsShort[m.iMonth()]

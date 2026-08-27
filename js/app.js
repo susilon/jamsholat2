@@ -123,7 +123,7 @@ function buildDefaultConfig() {
         isjumat: false,
         currentpray: '',
         namamasjid: 'Nama Masjid',
-        alamatmasjid: 'Alamat Lengkap dan Nomor Telepon.',
+        alamatmasjid: 'Alamat Lengkap dan Nomor Telepon (kalau ada).',
         prayer: {
             Subuh: { label: 'Subuh', iqomah: 5, adjustment: 2, duration: 5 },
             Terbit: { label: 'Terbit', iqomah: 5, adjustment: 2, duration: 0 },
@@ -136,16 +136,17 @@ function buildDefaultConfig() {
         infotextdata: [
             {
                 title: 'Hadist Ilmu',
-                content: '<span style="font-size: 39px;">\
-            مَنْ سَلَكَ طَرِيْقًايَلْتَمِسُ فِيْهِ عِلْمًا,سَهَّلَ اللهُ لَهُ طَرِيْقًا إِلَى الجَنَّةِ . رَوَاهُ مُسْلِم\
-            </span><br>\
-            Barang siapa menempuh satu jalan (cara) untuk mendapatkan ilmu, maka Allah pasti mudahkan baginya jalan menuju surga." (HR. Muslim)',
+                content: `<span style="font-size: 39px;">
+            مَنْ سَلَكَ طَرِيْقًايَلْتَمِسُ فِيْهِ عِلْمًا,سَهَّلَ اللهُ لَهُ طَرِيْقًا إِلَى الجَنَّةِ . رَوَاهُ مُسْلِم
+            </span><br>
+            Barang siapa menempuh satu jalan (cara) untuk mendapatkan ilmu,<br>
+            Maka Allah pasti mudahkan baginya jalan menuju surga." (HR. Muslim)`,
                 enable: true,
                 duration: 10
             },
             {
-                title: 'Iklan Jam Sholat 2',
-                content: '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat 2</span><br>Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat2.susilon.com',
+                title: 'Iklan Jam Sholat',
+                content: '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat 2</span><br>Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat.susilon.com',
                 enable: true,
                 duration: 5
             },
@@ -156,10 +157,10 @@ function buildDefaultConfig() {
             { title: 'Slot kosong', content: '', enable: false, duration: 5 },
             {
                 title: 'Info Khusus Saat Khotbah Jumat',
-                content: '<span style="font-size:39px">\
-            إذا قلت لصاحبك يوم الجمعة أنصت والإمام يخطب فقد لغوت\
-            </span><br>Jika engkau berkata kepada temanmu pada hari jum’at, ‘diam dan perhatikanlah’, sedangkan imam sedang berkhutbah, maka engkau telah berbuat sia-sia.” (HR. Al-Bukhari [934].\
-            ',
+                content: `<span style="font-size:39px">
+            إذا قلت لصاحبك يوم الجمعة أنصت والإمام يخطب فقد لغوت
+            </span><br><span style="font-size: 20px;">Jika engkau berkata kepada temanmu pada hari jum'at, 'diam dan perhatikanlah', sedangkan imam sedang berkhutbah, maka engkau telah berbuat sia-sia.” (HR. Al-Bukhari [934].</span>
+            `,
                 enable: false,
                 duration: 0
             }
