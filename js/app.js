@@ -301,6 +301,26 @@ function ticker() {
     }, 1000);
 }
 
+function updateIqomahCountdown(timepassed, current, iqomahMinutes) {
+    var wasActive = global.iqomahCountdownActive;
+    var countdownActive = current !== 'sunrise' && timepassed >= 0 && timepassed < iqomahMinutes * 60 * 1000;
+    global.iqomahCountdownActive = countdownActive;
+
+    if (!countdownActive) {
+        if (wasActive) {
+            tickerInfo();
+        }
+        return;
+    }
+
+    var remainingSeconds = Math.ceil((iqomahMinutes * 60 * 1000 - timepassed) / 1000);
+    var minutes = Math.floor(remainingSeconds / 60);
+    var seconds = remainingSeconds % 60;
+    var formatted = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+    $('.content').find('.info').html('<div class="iqomah-countdown">' + formatted + '</div>');
+}
+
 function getPrayer(prayname) {
     switch (prayname) {
         case 'fajr':
@@ -480,6 +500,7 @@ function setPrayerTimes() {
     }
 
     var currentIqomahTime = getPrayer(current).iqomah;
+    updateIqomahCountdown(timepassed, current, currentIqomahTime);
     if (Math.floor(timepassed / 1000 / 60) === currentIqomahTime) {
         if (current !== 'sunrise') {
             if (!global.isiqomah) {
@@ -540,9 +561,9 @@ function setScrollingText(data) {
     me.attr('data-speed', speed);
     me.attr('data-width', data.width || '100%');
 
-    var text = '<small>jamsholat.id</small>- ' + value.split('\n').join(' -<small>jamsholat.id</small>- ') + ' -';
+    var text = '- ' + value.split('\n').join(' - ') + ' -';
     if (global.ispraying || global.isiqomah) {
-        text = '- ' + valueOnPray.split('\n').join(' -<small>jamsholat.id</small>- ') + ' -';
+        text = '- ' + valueOnPray.split('\n').join(' - ') + ' -';
     }
 
     var animationSeconds = ((10 - speed) / 10) * text.length / 2;
@@ -556,6 +577,10 @@ function setScrollingText(data) {
 }
 
 function tickerInfo() {
+    if (global.iqomahCountdownActive) {
+        return;
+    }
+
     if (global.isjumat && global.currentpray === 'dhuhr') {
         var infoJumat = global.infotextdata[7].content;
         $('.content').find('.info').html(infoJumat);

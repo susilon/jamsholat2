@@ -476,10 +476,11 @@
       });
 
       $('#text-editor').attr('contenteditable', true);
-      CKEDITOR.inline('text-editor', {
-        extraAllowedContent: 'a(documentation);abbr[title];code',
-        removePlugins: 'stylescombo',
-        extraPlugins: 'sourcedialog'
+      CKEDITOR.replace('text-editor', {
+          toolbarLocation: 'bottom',
+          extraAllowedContent: 'a(documentation);abbr[title];code',
+          removePlugins: 'stylescombo',
+          extraPlugins: 'sourcedialog',
       });
     });
 
