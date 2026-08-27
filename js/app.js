@@ -4,7 +4,7 @@
  alarm
 */
 /*
-Jam Sholat 2 Alpha
+Jam Sholat 2 Beta ver 270826 
 Author : susilonurcahyo@gmail.com
 
 Copyright 2021 Susilo Nurcahyo
