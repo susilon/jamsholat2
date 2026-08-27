@@ -27,6 +27,7 @@
 
   function resetModal() {
     modal.off('click');
+    modal.off('change');
     $('.form-calculation').off();
     modal.find('.modal-title').text('Settings');
     modal.find('.modal-body').html('Setting');
@@ -57,31 +58,45 @@
     });
   }
 
+  function backgroundName(item) {
+    return typeof item === 'string' ? item : item && item.name || 'Local background';
+  }
+
   function isImageBackground(item) {
-    return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(item) ||
-      (/^https?:\/\//i.test(item) && !isVideoBackground(item));
+    if (item && item.localType === 'image') {
+      return true;
+    }
+    var name = backgroundName(item);
+    return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(name) ||
+      (/^https?:\/\//i.test(name) && !isVideoBackground(item));
   }
 
   function isVideoBackground(item) {
-    return /\.(mp4|m4v|webm|mov)(\?.*)?$/i.test(item) || /\/download\/video(?:\/|$)/i.test(item);
+    if (item && item.localType === 'video') {
+      return true;
+    }
+    var name = backgroundName(item);
+    return /\.(mp4|m4v|webm|mov)(\?.*)?$/i.test(name) || /\/download\/video(?:\/|$)/i.test(name);
   }
 
   function generateVideoList() {
     var listGroup = '<ul class="list-group">';
+    listGroup += '<li class="list-group-item bg-light"><b>Daftar background</b></li>';
     listGroup += '<li class="list-group-item list-new-background"><span class="float-left w-75"><input type="text" class="form-control" id="new-background" placeholder="Video filename or direct image URL"></span><button class="btn btn-sm btn-success float-right btn-background-save">Add</button></li>';
 
     $.each(global.videolist, function (index, item) {
-      var safeItem = escapeHtml(item);
+      var safeItem = escapeHtml(backgroundName(item));
       var type = isImageBackground(item) ? 'Image - 10 seconds' : isVideoBackground(item) ? 'Video - plays to end' : 'Unsupported format';
-      listGroup += '<li class="list-group-item"><span class="float-left">' + safeItem + ' <small class="text-muted">(' + type + ')</small></span><button class="btn btn-sm btn-danger float-right btn-background-remove" data-value="' + safeItem + '">Remove</button></li>';
+      listGroup += '<li class="list-group-item"><span class="float-left">' + safeItem + ' <small class="text-muted">(' + type + ')</small></span><button class="btn btn-sm btn-danger float-right btn-background-remove" data-index="' + index + '">Remove</button></li>';
     });
 
     listGroup += '</ul>';
 
     return `<strong>Background</strong><br>
-    Latar belakang video atau gambar dapat dicari di <a href='https://www.pexels.com/search/videos/mosques/?orientation=landscape' target='_blank'>Pexels.com</a>, pilih gambar/video kemudian klik kanan dan copy image/video link
-      ${ listGroup } <br>
-      <button class="btn btn-sm btn-primary btn-background-add">Add Background</button></small>`;
+    Latar belakang video atau gambar dapat dicari di <a href='https://www.pexels.com/search/videos/mosques/?orientation=landscape' target='_blank'>Pexels.com</a>, pilih gambar/video kemudian download dengan ukuran SD agar tidak menghabiskan memory,<br>
+    kemudian browse file yang sudah didowload untuk ditambahkan kedalam list background.<br><br>
+      ${ listGroup }<div class="form-group mt-2"><label for="new-background-file">Telusuri video atau gambar lokal</label><input type="file" class="form-control-file" id="new-background-file" accept="video/*,image/*"><small class="form-text text-muted">File yang dipilih tetap tersimpan di browser ini dan tidak diunggah.</small></div><br>
+      <button class="btn btn-sm btn-primary btn-background-add">Tambah Background dari URL</button></small><br><small>atau masukkan url gambar/video dari internet.</small>`;
   }
 
   function applyScreenZoom(value) {
@@ -103,8 +118,8 @@
     return '<div class="screen-settings">' +
       '<div class="form-group form-label"><label for="form-screen-zoom">Browser Zoom Level <span class="screen-zoom-value">' + zoomPercent + '%</span></label>' +
       '<input type="range" min="50" max="150" step="5" value="' + zoomPercent + '" class="form-control slider" id="form-screen-zoom">' +
-      '<small class="form-text text-muted">Adjust the display size of this prayer clock.</small></div>' +
-      '<button type="button" class="btn btn-outline-secondary btn-screen-zoom-reset">Reset to 100%</button>' +
+      '<small class="form-text text-muted">Rubah ukuran tulisan dan komponen.</small></div>' +
+      '<button type="button" class="btn btn-outline-secondary btn-screen-zoom-reset">Reset ke 100%</button>' +
       '</div>';
   }
 
@@ -117,11 +132,11 @@
     calculationOptions[global.calculation] = 'selected';
 
     var generalSettingsHeader = '<ul class="nav nav-pills generalSettingsHeader" role="tablist">' +
-      '<li class="nav-item" role="presentation"><a class="nav-link active" id="pills-general-tab" data-toggle="pill" href="#pills-general" role="tab" aria-controls="pills-general" aria-selected="true">General</a></li>' +
-      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab" aria-controls="pills-about" aria-selected="false">About</a></li>' +
-      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-credits-tab" data-toggle="pill" href="#pills-credits" role="tab" aria-controls="pills-credits" aria-selected="false">Credits</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link active" id="pills-general-tab" data-toggle="pill" href="#pills-general" role="tab" aria-controls="pills-general" aria-selected="true">Umum</a></li>' +
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Background</a></li>' +
-      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-screen-settings-tab" data-toggle="pill" href="#pills-screen-settings" role="tab" aria-controls="pills-screen-settings" aria-selected="false">Screen Settings</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-screen-settings-tab" data-toggle="pill" href="#pills-screen-settings" role="tab" aria-controls="pills-screen-settings" aria-selected="false">Setting Layar</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab" aria-controls="pills-about" aria-selected="false">Tentang</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-credits-tab" data-toggle="pill" href="#pills-credits" role="tab" aria-controls="pills-credits" aria-selected="false">Credits</a></li>' +
       '</ul>';
 
     var geolocationAvailable = !!(navigator && navigator.geolocation);
@@ -143,20 +158,21 @@
       '</div>' +
       '</div>' +
       '</form>' +
-      '<small><i>For Reference : https://github.com/batoulapps/adhan-js/blob/master/METHODS.md</i><br><b>*Jam komputer saat ini diset di GMT ' + gmtTimeSign + gmtTime + '</b></small>';
+      '<small><i>Referensi kalkulasi : <a href="https://github.com/batoulapps/adhan-js/blob/master/METHODS.md" target="_blank">https://github.com/batoulapps/adhan-js/blob/master/METHODS.md</a></i><br><b>*Jam komputer saat ini diset di GMT ' + gmtTimeSign + gmtTime + '</b></small>';
 
     var aboutForm = '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat - Beta</span><br>' +
       'Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat.susilon.com<br><br>' +
       'Please support your local muslim community.<br>Author : susilonurcahyo@gmail.com';
 
-    var creditsForm = 'Adhan js <br>' +
+    var creditsForm = '<b>Aplikasi ini bisa terwujud karena proyek-proyek berikut:</b><br><br>' +
+      'Adhan js <br>' +
       'Bootstrap 4 <br>' +
       'jQuery <br>' +
       'Moment js <br>' +
       'Moment-Hijri <br>' +
       'The Roboto Light Fonts <br>' +
-      'CKEditor 4 <br>' +
-      '<b>Video Credits :</b><br>Tawaf around the Kaaba - Hajj and Umrah Youtube Channel';
+      'CKEditor 4 <br><br>' +
+      '<b>Default video credits :</b><br>Tawaf around the Kaaba - Hajj and Umrah Youtube Channel';
 
     return {
       header: generalSettingsHeader,
@@ -262,15 +278,49 @@
       }
 
       global.videolist.push(newBackground);
+      saveSettings();
       modal.find('#pills-videolist').html(generateVideoList());
       modal.find('.list-new-background').hide();
     });
 
+    modal.on('change', '#new-background-file', function () {
+      var file = this.files && this.files[0];
+      if (!file || (file.type.indexOf('video/') !== 0 && file.type.indexOf('image/') !== 0)) {
+        return;
+      }
+      if (typeof window.saveLocalBackground !== 'function') {
+        console.warn('Local background storage is unavailable');
+        return;
+      }
+      var input = this;
+      window.saveLocalBackground(file).then(function (stored) {
+        var localItem = {
+          localId: stored.id,
+          localType: stored.type.indexOf('image/') === 0 ? 'image' : 'video',
+          name: stored.name
+        };
+        global.videolist.push(localItem);
+        saveSettings();
+        modal.find('#pills-videolist').html(generateVideoList());
+        modal.find('.list-new-background').hide();
+      }).catch(function (error) {
+        console.warn('Unable to store local background:', error);
+      }).then(function () {
+        input.value = '';
+      });
+    });
+
     modal.on('click', '.btn-background-remove', function () {
-      var removeValue = $(this).attr('data-value');
-      var removeIndex = global.videolist.indexOf(removeValue);
+      var removeIndex = Number($(this).attr('data-index'));
+      var removeItem = global.videolist[removeIndex];
       if (removeIndex >= 0) {
         global.videolist.splice(removeIndex, 1);
+        saveSettings();
+        if (removeItem && removeItem.localId && typeof window.deleteLocalBackground === 'function') {
+          window.deleteLocalBackground(removeItem.localId).catch(function (error) {
+            console.warn('Unable to delete local background:', error);
+          });
+        }
       }
       modal.find('#pills-videolist').html(generateVideoList());
       modal.find('.list-new-background').hide();
@@ -380,7 +430,7 @@
     }
 
     form += '<div class="form-group"><div class="form-content" id="text-editor">' + data.content + '</div></div>' +
-      '<div class="form-group form-label mt-3"><button type="button" class="btn btn-default btn-cancel">Cancel</button><button type="button" class="btn btn-primary btn-save">Save Info</button></div></form>';
+      '<div class="form-group form-label mt-3"><button type="button" class="btn btn-default btn-cancel">Cancel</button><button type="button" class="btn btn-primary btn-save">Simpan Info</button></div></form>';
 
     return form;
   }
