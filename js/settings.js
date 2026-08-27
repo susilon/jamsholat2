@@ -43,6 +43,30 @@
       '<button class="btn btn-sm btn-primary btn-videolist-add">Tambah</button></small>';
   }
 
+  function applyScreenZoom(value) {
+    var zoom = Number(value);
+
+    if (!isFinite(zoom) || zoom < 0.5 || zoom > 1.5) {
+      zoom = 1;
+    }
+
+    global.screenZoom = zoom;
+    document.documentElement.style.zoom = zoom;
+    return zoom;
+  }
+
+  function buildScreenSettingsView() {
+    var zoom = Number(global.screenZoom) || 1;
+    var zoomPercent = Math.round(zoom * 100);
+
+    return '<div class="screen-settings">' +
+      '<div class="form-group form-label"><label for="form-screen-zoom">Browser Zoom Level <span class="screen-zoom-value">' + zoomPercent + '%</span></label>' +
+      '<input type="range" min="50" max="150" step="5" value="' + zoomPercent + '" class="form-control slider" id="form-screen-zoom">' +
+      '<small class="form-text text-muted">Adjust the display size of this prayer clock.</small></div>' +
+      '<button type="button" class="btn btn-outline-secondary btn-screen-zoom-reset">Reset to 100%</button>' +
+      '</div>';
+  }
+
   function buildGeneralSettingsView() {
     var now = new Date();
     var selectedMadhab = global.madhab === 'hanafi' ? 'selected' : '';
@@ -56,6 +80,7 @@
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab" aria-controls="pills-about" aria-selected="false">About</a></li>' +
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-credits-tab" data-toggle="pill" href="#pills-credits" role="tab" aria-controls="pills-credits" aria-selected="false">Credits</a></li>' +
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Video List</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-screen-settings-tab" data-toggle="pill" href="#pills-screen-settings" role="tab" aria-controls="pills-screen-settings" aria-selected="false">Screen Settings</a></li>' +
       '</ul>';
 
     var geolocationAvailable = !!(navigator && navigator.geolocation);
@@ -99,6 +124,7 @@
         '<div class="tab-pane fade" id="pills-about" role="tabpanel" aria-labelledby="about-tab">' + aboutForm + '</div>' +
         '<div class="tab-pane fade" id="pills-credits" role="tabpanel" aria-labelledby="credits-tab">' + creditsForm + '</div>' +
         '<div class="tab-pane fade" id="pills-videolist" role="tabpanel" aria-labelledby="videolist-tab">' + generateVideoList() + '</div>' +
+        '<div class="tab-pane fade" id="pills-screen-settings" role="tabpanel" aria-labelledby="screen-settings-tab">' + buildScreenSettingsView() + '</div>' +
         '</div>'
     };
   }
@@ -113,6 +139,17 @@
     modal.find('.modal-header h5').css('display', 'none');
     modal.find('.modal-header').prepend(settingsView.header);
     modal.find('.modal-body').html(settingsView.body);
+
+    $('.screen-settings').on('input', '#form-screen-zoom', function () {
+      var zoom = applyScreenZoom(Number($(this).val()) / 100);
+      $('.screen-zoom-value').text(Math.round(zoom * 100) + '%');
+    });
+
+    $('.screen-settings').on('click', '.btn-screen-zoom-reset', function () {
+      var zoom = applyScreenZoom(1);
+      $('#form-screen-zoom').val(zoom * 100);
+      $('.screen-zoom-value').text('100%');
+    });
 
     $('.form-calculation').on('change', '#form-volume', function () {
       global.beep.beepVolume = Number($(this).val()) / 100;
@@ -158,6 +195,7 @@
       global.ishaAngle = $('#form-ishaAngle').val();
       global.imsak = Number($('#form-imsak').val());
       originalBeepVol = global.beep.beepVolume;
+      applyScreenZoom(global.screenZoom);
       saveSettings();
 
       if (typeof callback === 'function') {
@@ -456,6 +494,7 @@
   window.saveSettings = saveSettings;
 
   bindElementInteractions();
+  applyScreenZoom(global.screenZoom);
 
   if (typeof firstInstallation !== 'undefined' && firstInstallation) {
     showGeneralSettings();
