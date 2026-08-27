@@ -464,10 +464,11 @@
 
       $('.form-infotext').on('click', '.btn-save', function () {
         itemData.title = $('.form-infotext').find('.form-title').val();
-        itemData.content = $('.form-infotext').find('.form-content').html();
+        itemData.content = editor && !editor.destroyed ? editor.getData() : $('.form-infotext').find('.form-content').html();
         itemData.enable = $('.form-infotext').find('.form-enable').is(':checked');
         itemData.duration = $('.form-infotext').find('.form-duration').val();
         data[index] = itemData;
+        saveSettings();
         modal.find('.modal-body').html(getInfoTextList(data));
 
         if (editor && !editor.destroyed) {
@@ -476,7 +477,7 @@
       });
 
       $('#text-editor').attr('contenteditable', true);
-      CKEDITOR.replace('text-editor', {
+    editor = CKEDITOR.replace('text-editor', {
           toolbarLocation: 'bottom',
           extraAllowedContent: 'a(documentation);abbr[title];code',
           removePlugins: 'stylescombo',
