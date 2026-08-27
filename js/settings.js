@@ -3,149 +3,196 @@ modal.on('shown.bs.modal', function() {
   $(document).off('focusin.modal');
 });
 
-function resetModal() {
-  modal.off('click');
-  $('.form-calculation').off();
-  modal.find('.modal-title').text('Settings');
-  modal.find('.modal-body').html("Setting");
-  modal.find('.modal-save').off();
-  modal.find('.generalSettingsHeader').remove();
-  modal.find('.modal-header H5').css('display','');  
-}
+  function resetModal() {
+    modal.off('click');
+    $('.form-calculation').off();
+    modal.find('.modal-title').text('Settings');
+    modal.find('.modal-body').html('Setting');
+    modal.find('.modal-save').off();
+    modal.find('.generalSettingsHeader').remove();
+    modal.find('.modal-header h5').css('display', '');
+  }
 
-function showGeneralSettings(callback) {
-  now = new Date();
-  resetModal();
-  var selectHanafi = global.madhab == 'hanafi'?'selected':'';
-  var selectCalculation = ['','','','','','','','','',''];
-  var gmtTimeSign = now.getTimezoneOffset() < 0 ? '+' : '';
-  var gmtTime = -now.getTimezoneOffset()/60;
-  selectCalculation[global.calculation] = 'selected';
+  function saveSettings() {
+    try {
+      localStorage.configuration = JSON.stringify(global);
+      return true;
+    } catch (error) {
+      console.warn('Unable to save settings:', error);
+      return false;
+    }
+  }
 
-  var generalSettingsHeader = '<ul class="nav nav-pills generalSettingsHeader" role="tablist">\
-  <li class="nav-item" role="presentation">\
-    <a class="nav-link active" id="pills-general-tab" data-toggle="pill" href="#pills-general" role="tab" aria-controls="pills-general" aria-selected="true">General</a>\
-  </li>\
-  <li class="nav-item" role="presentation">\
-    <a class="nav-link" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab" aria-controls="pills-about" aria-selected="false">About</a>\
-  </li>\
-  <li class="nav-item" role="presentation">\
-    <a class="nav-link" id="pills-credits-tab" data-toggle="pill" href="#pills-credits" role="tab" aria-controls="pills-credits" aria-selected="false">Credits</a>\
-  </li>\
-  <li class="nav-item" role="presentation">\
-    <a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Video List</a>\
-  </li>\
-  </ul>';
-  var calculationForm = '<form class="form-calculation"> \
-  <div class=row> \
-  <div class="col-6"> <div class="form-group form-label"> \
-    <label for="form">Format Tanggal <small><i>(id: indonesia, en: english, etc)</i></small></label> \
-    <input type="text" class="form-control" id="form-locale" value="' + global.locale + '"> \
-  </div>\
-  <div class="form-group form-label"> \
-    <label for="form">Mazhab </label> \
-    <select class="form-control" id="form-madhab"> \
-      <option value="safii">Safii</option> \
-      <option value="hanafi" ' + selectHanafi + '>Hanafi</option> \
-    </select> \
-  </div>\
-  <div class="form-group form-label"> \
-    <label for="form">Metode </label> \
-    <select class="form-control" id="form-calculation"> \
-      <option value="0" ' + selectCalculation[0] + '>Egyptian</option> \
-      <option value="1" ' + selectCalculation[1] + '>Muslim World League</option> \
-      <option value="2" ' + selectCalculation[2] + '>Karachi</option> \
-      <option value="3" ' + selectCalculation[3] + '>UmmAlQura</option> \
-      <option value="4" ' + selectCalculation[4] + '>Singapore</option> \
-      <option value="5" ' + selectCalculation[5] + '>North America</option> \
-      <option value="6" ' + selectCalculation[6] + '>Dubai</option> \
-      <option value="7" ' + selectCalculation[7] + '>Qatar</option> \
-      <option value="8" ' + selectCalculation[8] + '>Kuwait</option> \
-      <option value="9" ' + selectCalculation[9] + '>Moon Sighting Committee</option> \
-    </select> \
-  </div>  \
-  <div class="form-group form-label"> \
-    <label for="form">Imsak <small><i>(menit sebelum subuh)</i></small></label> \
-    <input type="text" class="form-control" id="form-imsak" value="' + global.imsak + '"> \
-  </div> </div> \
-  <div class="col-6"> \
-  <div class="form-group form-label"> \
-    <label for="form">Lat, Long </label> \
-    <input type="text" class="form-control" id="form-latlngdata" value="' + global.latlngdata + '"> \
-  </div>\
-  <div class="form-group form-label"> \
-    <label for="form">Sudut Subuh </label> \
-    <input type="text" class="form-control" id="form-fajrAngle" value="' + global.fajrAngle + '"> \
-  </div> \
-  <div class="form-group form-label"> \
-  <label for="form">Sudut Isya </label> \
-  <input type="text" class="form-control" id="form-ishaAngle" value="' + global.ishaAngle + '"> \
-  </div> \
-  <div class="form-group form-label"> \
-    <label for="form">Beep Volume</label> \
-    <input type="range" min="0" max="100" value="' + global.beep.beepVolume * 100 + '" class="form-control slider" id="form-volume">\
-  </div>\
-  </div> \
-  </div> </form> <small><i>For Reference : https://github.com/batoulapps/adhan-js/blob/master/METHODS.md</i><br>\
-  <b>*Jam komputer saat ini diset di GMT ' + gmtTimeSign + gmtTime + '</b></small>';
+  function generateVideoList() {
+    var listGroup = '<ul class="list-group">';
+    listGroup += '<li class="list-group-item list-new-video"><span class="float-left w-50"><input type="text" class="form-control" id="new-video"></span><button class="btn btn-sm btn-success float-right btn-videolist-save">Simpan</button></li>';
 
-  var aboutForm = '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat 2 - Beta</span><br>\
-  Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat2.susilon.com\
-  <br><br>\
-  Please support your local muslim community.<br>\
-  Author : susilonurcahyo@gmail.com';
+    $.each(global.videolist, function (index, item) {
+      listGroup += '<li class="list-group-item"><span class="float-left">' + item + '</span><button class="btn btn-sm btn-danger float-right btn-videolist-remove" data-value="' + item + '">Hapus</button></li>';
+    });
 
-  var creditsForm = 'Adhan js <br>\
-  Bootstrap 4 <br>\
-  jQuery <br>\
-  Moment js <br>\
-  Moment-Hijri <br>\
-  The Roboto Light Fonts <br>\
-  CKEditor 4 <br>\
-  <b>Video Credits :</b><br>\
-  Tawaf around the Kaaba - Hajj and Umrah Youtube Channel';
+    listGroup += '</ul>';
 
-  var videoListForm = generateVideoList();
+    return 'Background Video List<br><small>Copy file video MP4 ke folder videos untuk menambahkan video, <br>' +
+      'kemudian klik tombol Tambah, dan masukkan nama file, kemudian klik tombol Simpan dan Save changes<br><br>' +
+      listGroup + '<br>' +
+      '<button class="btn btn-sm btn-primary btn-videolist-add">Tambah</button></small>';
+  }
 
-  var generalSettingsForm = '<div class="tab-content">\
-  <div class="tab-pane fade show active" id="pills-general" role="tabpanel" aria-labelledby="general-tab">' + calculationForm + '</div>\
-  <div class="tab-pane fade" id="pills-about" role="tabpanel" aria-labelledby="about-tab">' + aboutForm + '</div>\
-  <div class="tab-pane fade" id="pills-credits" role="tabpanel" aria-labelledby="credits-tab">' + creditsForm + '</div>\
-  <div class="tab-pane fade" id="pills-videolist" role="tabpanel" aria-labelledby="videolist-tab">' + videoListForm + '</div>\
-  </div>';  
+  function applyScreenZoom(value) {
+    var zoom = Number(value);
 
-  var originalBeepVol = global.beep.beepVolume;
-  
-  modal.find('.modal-title').text('General Settings');
-  modal.find('.modal-header H5').css('display','none');
-  modal.find('.modal-header').prepend(generalSettingsHeader);
-  modal.find('.modal-body').html(generalSettingsForm);
-  
-  $('.form-calculation').on('change','#form-volume', function() {
-    global.beep.beepVolume = $(this).val()/100;
-    playBeep('s');
-  });
-  
-  modal.on('hidden.bs.modal', function () {
-    global.beep.beepVolume = originalBeepVol;
-  })
+    if (!isFinite(zoom) || zoom < 0.5 || zoom > 1.5) {
+      zoom = 1;
+    }
 
-  modal.modal('show');
+    global.screenZoom = zoom;
+    document.documentElement.style.zoom = zoom;
+    return zoom;
+  }
 
-  setTimeout(function() {    
-    $('#form-value').focus();
-  }, 500); 
+  function buildScreenSettingsView() {
+    var zoom = Number(global.screenZoom) || 1;
+    var zoomPercent = Math.round(zoom * 100);
 
-  modal.on('click', '.modal-save', function() {
-    global.locale = $('#form-locale').val();
-    global.madhab = $('#form-madhab').val();
-    global.calculation = $('#form-calculation').val();
-    global.latlngdata = $('#form-latlngdata').val();
-    global.fajrAngle = $('#form-fajrAngle').val();
-    global.ishaAngle = $('#form-ishaAngle').val();
-    global.imsak = $('#form-imsak').val();    
-    originalBeepVol = global.beep.beepVolume;
-    saveSettings();
+    return '<div class="screen-settings">' +
+      '<div class="form-group form-label"><label for="form-screen-zoom">Browser Zoom Level <span class="screen-zoom-value">' + zoomPercent + '%</span></label>' +
+      '<input type="range" min="50" max="150" step="5" value="' + zoomPercent + '" class="form-control slider" id="form-screen-zoom">' +
+      '<small class="form-text text-muted">Adjust the display size of this prayer clock.</small></div>' +
+      '<button type="button" class="btn btn-outline-secondary btn-screen-zoom-reset">Reset to 100%</button>' +
+      '</div>';
+  }
+
+  function buildGeneralSettingsView() {
+    var now = new Date();
+    var selectedMadhab = global.madhab === 'hanafi' ? 'selected' : '';
+    var calculationOptions = ['', '', '', '', '', '', '', '', '', ''];
+    var gmtTimeSign = now.getTimezoneOffset() < 0 ? '+' : '';
+    var gmtTime = -now.getTimezoneOffset() / 60;
+    calculationOptions[global.calculation] = 'selected';
+
+    var generalSettingsHeader = '<ul class="nav nav-pills generalSettingsHeader" role="tablist">' +
+      '<li class="nav-item" role="presentation"><a class="nav-link active" id="pills-general-tab" data-toggle="pill" href="#pills-general" role="tab" aria-controls="pills-general" aria-selected="true">General</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab" aria-controls="pills-about" aria-selected="false">About</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-credits-tab" data-toggle="pill" href="#pills-credits" role="tab" aria-controls="pills-credits" aria-selected="false">Credits</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Video List</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-screen-settings-tab" data-toggle="pill" href="#pills-screen-settings" role="tab" aria-controls="pills-screen-settings" aria-selected="false">Screen Settings</a></li>' +
+      '</ul>';
+
+    var geolocationAvailable = !!(navigator && navigator.geolocation);
+    var calculationForm = '<form class="form-calculation">' +
+      '<div class="row">' +
+      '<div class="col-6">' +
+      '<div class="form-group form-label"><label for="form">Format Tanggal <small><i>(id: indonesia, en: english, etc)</i></small></label><input type="text" class="form-control" id="form-locale" value="' + global.locale + '"></div>' +
+      '<div class="form-group form-label"><label for="form">Mazhab</label><select class="form-control" id="form-madhab"><option value="safii">Safii</option><option value="hanafi" ' + selectedMadhab + '>Hanafi</option></select></div>' +
+      '<div class="form-group form-label"><label for="form">Metode</label><select class="form-control" id="form-calculation"><option value="0" ' + calculationOptions[0] + '>Egyptian</option><option value="1" ' + calculationOptions[1] + '>Muslim World League</option><option value="2" ' + calculationOptions[2] + '>Karachi</option><option value="3" ' + calculationOptions[3] + '>UmmAlQura</option><option value="4" ' + calculationOptions[4] + '>Singapore</option><option value="5" ' + calculationOptions[5] + '>North America</option><option value="6" ' + calculationOptions[6] + '>Dubai</option><option value="7" ' + calculationOptions[7] + '>Qatar</option><option value="8" ' + calculationOptions[8] + '>Kuwait</option><option value="9" ' + calculationOptions[9] + '>Moon Sighting Committee</option></select></div>' +
+      '<div class="form-group form-label"><label for="form">Imsak <small><i>(menit sebelum subuh)</i></small></label><input type="text" class="form-control" id="form-imsak" value="' + global.imsak + '"></div>' +
+      '</div>' +
+      '<div class="col-6">' +
+      '<div class="form-group form-label"><label for="form">Lat, Long</label>' +
+      '<div class="input-group"><input type="text" class="form-control" id="form-latlngdata" value="' + global.latlngdata + '"><div class="input-group-append"><button type="button" class="btn btn-outline-secondary btn-use-location" ' + (geolocationAvailable ? '' : 'disabled') + ' title="Use current location" aria-label="Use current location"><span aria-hidden="true">📍</span></button></div></div>' +
+      '<small class="form-text text-muted location-status">' + (geolocationAvailable ? 'Use browser location' : 'Geolocation not supported in this browser') + '</small></div>' +
+      '<div class="form-group form-label"><label for="form">Sudut Subuh</label><input type="text" class="form-control" id="form-fajrAngle" value="' + global.fajrAngle + '"></div>' +
+      '<div class="form-group form-label"><label for="form">Sudut Isya</label><input type="text" class="form-control" id="form-ishaAngle" value="' + global.ishaAngle + '"></div>' +
+      '<div class="form-group form-label"><label for="form">Beep Volume</label><input type="range" min="0" max="100" value="' + (global.beep.beepVolume * 100) + '" class="form-control slider" id="form-volume"></div>' +
+      '</div>' +
+      '</div>' +
+      '</form>' +
+      '<small><i>For Reference : https://github.com/batoulapps/adhan-js/blob/master/METHODS.md</i><br><b>*Jam komputer saat ini diset di GMT ' + gmtTimeSign + gmtTime + '</b></small>';
+
+    var aboutForm = '<img src="images/android.png" height="150px"><br><span style="font-size: 39px;">Jam Sholat - Beta</span><br>' +
+      'Yuk kita bikin petunjuk waktu sholat dengan mudah.<br>jamsholat.susilon.com<br><br>' +
+      'Please support your local muslim community.<br>Author : susilonurcahyo@gmail.com';
+
+    var creditsForm = 'Adhan js <br>' +
+      'Bootstrap 4 <br>' +
+      'jQuery <br>' +
+      'Moment js <br>' +
+      'Moment-Hijri <br>' +
+      'The Roboto Light Fonts <br>' +
+      'CKEditor 4 <br>' +
+      '<b>Video Credits :</b><br>Tawaf around the Kaaba - Hajj and Umrah Youtube Channel';
+
+    return {
+      header: generalSettingsHeader,
+      body: '<div class="tab-content">' +
+        '<div class="tab-pane fade show active" id="pills-general" role="tabpanel" aria-labelledby="general-tab">' + calculationForm + '</div>' +
+        '<div class="tab-pane fade" id="pills-about" role="tabpanel" aria-labelledby="about-tab">' + aboutForm + '</div>' +
+        '<div class="tab-pane fade" id="pills-credits" role="tabpanel" aria-labelledby="credits-tab">' + creditsForm + '</div>' +
+        '<div class="tab-pane fade" id="pills-videolist" role="tabpanel" aria-labelledby="videolist-tab">' + generateVideoList() + '</div>' +
+        '<div class="tab-pane fade" id="pills-screen-settings" role="tabpanel" aria-labelledby="screen-settings-tab">' + buildScreenSettingsView() + '</div>' +
+        '</div>'
+    };
+  }
+
+  function showGeneralSettings(callback) {
+    var now = new Date();
+    var settingsView = buildGeneralSettingsView();
+    var originalBeepVol = global.beep.beepVolume;
+
+    resetModal();
+    modal.find('.modal-title').text('General Settings');
+    modal.find('.modal-header h5').css('display', 'none');
+    modal.find('.modal-header').prepend(settingsView.header);
+    modal.find('.modal-body').html(settingsView.body);
+
+    $('.screen-settings').on('input', '#form-screen-zoom', function () {
+      var zoom = applyScreenZoom(Number($(this).val()) / 100);
+      $('.screen-zoom-value').text(Math.round(zoom * 100) + '%');
+    });
+
+    $('.screen-settings').on('click', '.btn-screen-zoom-reset', function () {
+      var zoom = applyScreenZoom(1);
+      $('#form-screen-zoom').val(zoom * 100);
+      $('.screen-zoom-value').text('100%');
+    });
+
+    $('.form-calculation').on('change', '#form-volume', function () {
+      global.beep.beepVolume = Number($(this).val()) / 100;
+      if (typeof playBeep === 'function') {
+        playBeep('s');
+      }
+    });
+
+    $('.form-calculation').on('click', '.btn-use-location', function () {
+      if (!navigator || !navigator.geolocation) {
+        modal.find('.location-status').text('Geolocation is not supported on this browser.');
+        return;
+      }
+
+      modal.find('.location-status').text('Getting current location...');
+      navigator.geolocation.getCurrentPosition(function (position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        var latlng = latitude + ', ' + longitude;
+
+        $('#form-latlngdata').val(latlng);
+        modal.find('.location-status').text('Location updated from device/browser.');
+      }, function (error) {
+        console.warn('Geolocation failed:', error);
+        modal.find('.location-status').text('Unable to get browser location. Please enter coordinates manually.');
+      }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      });
+    });
+
+    modal.on('hidden.bs.modal', function () {
+      global.beep.beepVolume = originalBeepVol;
+    });
+
+    modal.on('click', '.modal-save', function () {
+      global.locale = $('#form-locale').val();
+      global.madhab = $('#form-madhab').val();
+      global.calculation = Number($('#form-calculation').val());
+      global.latlngdata = $('#form-latlngdata').val();
+      global.fajrAngle = $('#form-fajrAngle').val();
+      global.ishaAngle = $('#form-ishaAngle').val();
+      global.imsak = Number($('#form-imsak').val());
+      originalBeepVol = global.beep.beepVolume;
+      applyScreenZoom(global.screenZoom);
+      saveSettings();
 
     if (callback !=null) {
       callback();
@@ -482,14 +529,25 @@ $('.marquee-container').click(function() {
   showSettingsScrollText(this, setScrollingText);
 });
 
-$('.datetime').click(function() {
-  showGeneralSettings(function() {
-    // prayer will automatically read new configuration on ticker
-    console.log('done');
-  });
-});
+    $('.datetime').off('click').on('click', function () {
+      showGeneralSettings(function () {
+        console.log('done');
+      });
+    });
+  }
 
-console.log(firstInstallation);
-if (firstInstallation) {
-  showGeneralSettings();
-}
+  window.showGeneralSettings = showGeneralSettings;
+  window.showSettingsLabel = showSettingsLabel;
+  window.showSettingsWaktuSholat = showSettingsWaktuSholat;
+  window.showSettingsInfotext = showSettingsInfotext;
+  window.showSettingsScrollText = showSettingsScrollText;
+  window.generateVideoList = generateVideoList;
+  window.saveSettings = saveSettings;
+
+  bindElementInteractions();
+  applyScreenZoom(global.screenZoom);
+
+  if (typeof firstInstallation !== 'undefined' && firstInstallation) {
+    showGeneralSettings();
+  }
+})();
