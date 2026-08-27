@@ -430,7 +430,8 @@
     }
 
     form += '<div class="form-group"><div class="form-content" id="text-editor">' + data.content + '</div></div>' +
-      '<div class="form-group form-label mt-3"><button type="button" class="btn btn-default btn-cancel">Cancel</button><button type="button" class="btn btn-primary btn-save">Simpan Info</button></div></form>';
+      '<div class="form-group form-label mt-3 float-right text-right"><button type="button" class="btn btn-default btn-cancel">Cancel</button><button type="button" class="btn btn-primary btn-save">Simpan Info</button>' +
+      '<br><small class="text-danger"><i>Simpan info dulu sebelum Simpan perubahan!</i></small></div></form>';
 
     return form;
   }
