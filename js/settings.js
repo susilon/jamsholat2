@@ -45,20 +45,43 @@
     }
   }
 
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[character];
+    });
+  }
+
+  function isImageBackground(item) {
+    return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(item) ||
+      (/^https?:\/\//i.test(item) && !isVideoBackground(item));
+  }
+
+  function isVideoBackground(item) {
+    return /\.(mp4|m4v|webm|mov)(\?.*)?$/i.test(item) || /\/download\/video(?:\/|$)/i.test(item);
+  }
+
   function generateVideoList() {
     var listGroup = '<ul class="list-group">';
-    listGroup += '<li class="list-group-item list-new-video"><span class="float-left w-50"><input type="text" class="form-control" id="new-video"></span><button class="btn btn-sm btn-success float-right btn-videolist-save">Simpan</button></li>';
+    listGroup += '<li class="list-group-item list-new-background"><span class="float-left w-75"><input type="text" class="form-control" id="new-background" placeholder="Video filename or direct image URL"></span><button class="btn btn-sm btn-success float-right btn-background-save">Add</button></li>';
 
     $.each(global.videolist, function (index, item) {
-      listGroup += '<li class="list-group-item"><span class="float-left">' + item + '</span><button class="btn btn-sm btn-danger float-right btn-videolist-remove" data-value="' + item + '">Hapus</button></li>';
+      var safeItem = escapeHtml(item);
+      var type = isImageBackground(item) ? 'Image - 10 seconds' : isVideoBackground(item) ? 'Video - plays to end' : 'Unsupported format';
+      listGroup += '<li class="list-group-item"><span class="float-left">' + safeItem + ' <small class="text-muted">(' + type + ')</small></span><button class="btn btn-sm btn-danger float-right btn-background-remove" data-value="' + safeItem + '">Remove</button></li>';
     });
 
     listGroup += '</ul>';
 
-    return 'Background Video List<br><small>Copy file video MP4 ke folder videos untuk menambahkan video, <br>' +
-      'kemudian klik tombol Tambah, dan masukkan nama file, kemudian klik tombol Simpan dan Save changes<br><br>' +
-      listGroup + '<br>' +
-      '<button class="btn btn-sm btn-primary btn-videolist-add">Tambah</button></small>';
+    return `<strong>Background</strong><br>
+    Latar belakang video atau gambar dapat dicari di <a href='https://www.pexels.com/search/videos/mosques/?orientation=landscape' target='_blank'>Pexels.com</a>, pilih gambar/video kemudian klik kanan dan copy image/video link
+      ${ listGroup } <br>
+      <button class="btn btn-sm btn-primary btn-background-add">Add Background</button></small>`;
   }
 
   function applyScreenZoom(value) {
@@ -97,7 +120,7 @@
       '<li class="nav-item" role="presentation"><a class="nav-link active" id="pills-general-tab" data-toggle="pill" href="#pills-general" role="tab" aria-controls="pills-general" aria-selected="true">General</a></li>' +
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab" aria-controls="pills-about" aria-selected="false">About</a></li>' +
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-credits-tab" data-toggle="pill" href="#pills-credits" role="tab" aria-controls="pills-credits" aria-selected="false">Credits</a></li>' +
-      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Video List</a></li>' +
+      '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-videolist-tab" data-toggle="pill" href="#pills-videolist" role="tab" aria-controls="pills-videolist" aria-selected="false">Background</a></li>' +
       '<li class="nav-item" role="presentation"><a class="nav-link" id="pills-screen-settings-tab" data-toggle="pill" href="#pills-screen-settings" role="tab" aria-controls="pills-screen-settings" aria-selected="false">Screen Settings</a></li>' +
       '</ul>';
 
@@ -227,33 +250,33 @@
       $('.form-calculation').off();
     });
 
-    modal.on('click', '.btn-videolist-add', function () {
-      modal.find('.list-new-video').show();
-      modal.find('#new-video').focus();
+    modal.on('click', '.btn-background-add', function () {
+      modal.find('.list-new-background').show();
+      modal.find('#new-background').focus();
     });
 
-    modal.on('click', '.btn-videolist-save', function () {
-      var newVideo = modal.find('#new-video').val();
-      if (!newVideo) {
+    modal.on('click', '.btn-background-save', function () {
+      var newBackground = modal.find('#new-background').val().trim();
+      if (!newBackground) {
         return;
       }
 
-      global.videolist.push(newVideo);
+      global.videolist.push(newBackground);
       modal.find('#pills-videolist').html(generateVideoList());
-      modal.find('.list-new-video').hide();
+      modal.find('.list-new-background').hide();
     });
 
-    modal.on('click', '.btn-videolist-remove', function () {
+    modal.on('click', '.btn-background-remove', function () {
       var removeValue = $(this).attr('data-value');
       var removeIndex = global.videolist.indexOf(removeValue);
       if (removeIndex >= 0) {
         global.videolist.splice(removeIndex, 1);
       }
       modal.find('#pills-videolist').html(generateVideoList());
-      modal.find('.list-new-video').hide();
+      modal.find('.list-new-background').hide();
     });
 
-    modal.find('.list-new-video').hide();
+    modal.find('.list-new-background').hide();
     modal.modal('show');
 
     setTimeout(function () {

@@ -198,20 +198,24 @@ CKEditor 4
         z-index: 0;
     }
     .video-container video {
-        /* Make video to at least 100% wide and tall */
-        min-width: 100%; 
-        min-height: 100%; 
-
-        /* Setting width & height to auto prevents the browser from stretching or squishing the video */
-        width: auto;
-        height: auto;
-
-        /* Center the video */
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%,-50%);
         overflow: hidden;
+        opacity: 0;
+        transition: opacity 700ms ease-in-out;
+    }
+    .video-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+        opacity: 0;
+        transition: opacity 700ms ease-in-out;
     }
     .main-container {
         z-index: 999;
@@ -312,9 +316,8 @@ CKEditor 4
 <body>
 <!-- Video Background -->    
 <div class="video-container hide-onpray">
-<video autoplay muted class="video" id='bg-video'>
-    <source src="videos/tawaf.mp4" type="video/mp4">
-</video>
+<video autoplay muted playsinline preload="none" class="video" id="bg-video"></video>
+<img class="image" id="bg-image" alt="">
 </div>
 
 <!-- Layout -->    
@@ -381,8 +384,8 @@ CKEditor 4
 <script src="vendor/adhan/Adhan.js"></script>
 <script src="vendor/moment-hijri/moment-hijri.js"></script>
 <script src="vendor/ckeditor/ckeditor.js"></script>
-<script src="js/app.js?v=20260827"></script>
-<script src="js/settings.js?v=20260827"></script>
+<script src="js/app.js?v=20260827-2"></script>
+<script src="js/settings.js?v=20260827-2"></script>
 
 <!-- iframe src="audio/silence.mp3" allow="autoplay" id="audio" style="display: none"></iframe -->
 </body>
