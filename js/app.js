@@ -77,9 +77,6 @@ function buildDefaultConfig() {
             {
                 title: 'Hadist Ilmu',
                 content: '<span style="font-size: 39px;">\
-            {
-                title: 'Hadist Ilmu',
-                content: '<span style="font-size: 39px;">\
             مَنْ سَلَكَ طَرِيْقًايَلْتَمِسُ فِيْهِ عِلْمًا,سَهَّلَ اللهُ لَهُ طَرِيْقًا إِلَى الجَنَّةِ . رَوَاهُ مُسْلِم\
             </span><br>\
             Barang siapa menempuh satu jalan (cara) untuk mendapatkan ilmu, maka Allah pasti mudahkan baginya jalan menuju surga." (HR. Muslim)',
@@ -540,19 +537,103 @@ function initializeDisplay() {
     });
 
     var videoPlayer = document.getElementById('bg-video');
-    if (videoPlayer) {
-        var videoCtr = 0;
-        console.log('playing videos/' + global.videolist[videoCtr] + ' of ' + global.videolist.length + ' videos');
-        videoPlayer.src = 'videos/' + global.videolist[videoCtr];
-        videoPlayer.onended = function () {
-            videoCtr++;
-            if (videoCtr >= global.videolist.length) {
-                videoCtr = 0;
-            }
-            console.log('playing videos/' + global.videolist[videoCtr] + ' of ' + global.videolist.length + ' videos');
-            videoPlayer.src = 'videos/' + global.videolist[videoCtr];
-        };
+    var imagePlayer = document.getElementById('bg-image');
+    var backgroundItems = global.videolist && global.videolist.length ? global.videolist : ['tawaf.mp4'];
+    var backgroundCtr = 0;
+    var imageTimer;
+    var fadeTimer;
+
+    function isImageBackground(item) {
+        return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(item) ||
+            (/^https?:\/\//i.test(item) && !isVideoBackground(item));
     }
+
+    function isVideoBackground(item) {
+        return /\.(mp4|m4v|webm|mov)(\?.*)?$/i.test(item) || /\/download\/video(?:\/|$)/i.test(item);
+    }
+
+    function getBackgroundSource(item) {
+        return /^https?:\/\//i.test(item) ? item : 'videos/' + item;
+    }
+
+    function showNextBackground() {
+        clearTimeout(imageTimer);
+        clearTimeout(fadeTimer);
+        if (!backgroundItems.length) {
+            return;
+        }
+
+        var item = backgroundItems[backgroundCtr];
+        var source = getBackgroundSource(item);
+        backgroundCtr = (backgroundCtr + 1) % backgroundItems.length;
+
+        if (isImageBackground(item)) {
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.onended = null;
+                videoPlayer.onerror = null;
+            }
+            if (imagePlayer) {
+                imagePlayer.onerror = showNextBackground;
+                imagePlayer.onload = function () {
+                    imagePlayer.style.opacity = '1';
+                    if (videoPlayer) {
+                        fadeTimer = setTimeout(function () {
+                            videoPlayer.style.display = 'none';
+                            videoPlayer.style.opacity = '0';
+                            videoPlayer.removeAttribute('src');
+                            videoPlayer.load();
+                        }, 700);
+                    }
+                    imageTimer = setTimeout(showNextBackground, 10000);
+                };
+                var imageWasHidden = imagePlayer.style.display === 'none';
+                imagePlayer.style.display = 'block';
+                if (imageWasHidden) {
+                    imagePlayer.style.opacity = '0';
+                }
+                imagePlayer.src = source;
+            }
+            console.log('showing image ' + source + ' for 10 seconds');
+            return;
+        }
+
+        if (imagePlayer) {
+            imagePlayer.onload = null;
+            imagePlayer.onerror = null;
+        }
+        if (!isVideoBackground(item)) {
+            console.warn('Unsupported background format:', item);
+            showNextBackground();
+            return;
+        }
+        if (videoPlayer) {
+            videoPlayer.onended = function () {
+                videoPlayer.style.opacity = '0';
+                fadeTimer = setTimeout(showNextBackground, 700);
+            };
+            videoPlayer.onerror = showNextBackground;
+            videoPlayer.oncanplay = function () {
+                videoPlayer.style.display = 'block';
+                videoPlayer.style.opacity = '1';
+                if (imagePlayer) {
+                    fadeTimer = setTimeout(function () {
+                        imagePlayer.style.display = 'none';
+                        imagePlayer.style.opacity = '0';
+                        imagePlayer.removeAttribute('src');
+                    }, 700);
+                }
+            };
+            videoPlayer.style.display = 'block';
+            videoPlayer.style.opacity = '0';
+            videoPlayer.src = source;
+            videoPlayer.load();
+            videoPlayer.play().catch(function () {});
+            console.log('playing ' + source + ' until it ends');
+        }
+    }
+
+    showNextBackground();
 
     setScrollingText(global.scrollingdata);
     tickerInfo();
