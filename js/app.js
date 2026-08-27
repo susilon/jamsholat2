@@ -319,7 +319,7 @@ function updateIqomahCountdown(timepassed, current, iqomahMinutes) {
     var seconds = remainingSeconds % 60;
     var formatted = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
 
-    $('.content').find('.info').html('<div class="iqomah-countdown">' + formatted + '</div>');
+    $('.content').find('.info').html(`<div class="iqomah-countdown">Iqomah<br><span class="iqomah-timer">${ formatted }</span></div>`);
 }
 
 function getPrayer(prayname) {
