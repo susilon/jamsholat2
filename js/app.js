@@ -4,7 +4,7 @@
  alarm
 */
 /*
-Jam Sholat 2 Beta
+Jam Sholat 2 Beta ver 270826 
 Author : susilonurcahyo@gmail.com
 
 Copyright 2021 Susilo Nurcahyo
@@ -72,7 +72,11 @@ function buildDefaultConfig() {
             Isya: { label: 'Isya', iqomah: 5, adjustment: 2, duration: 10 }
         },
         infotextinterval: 5,
+        infotextinterval: 5,
         infotextdata: [
+            {
+                title: 'Hadist Ilmu',
+                content: '<span style="font-size: 39px;">\
             {
                 title: 'Hadist Ilmu',
                 content: '<span style="font-size: 39px;">\
