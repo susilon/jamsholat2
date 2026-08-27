@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.jamsholat2.android.ui.components.aquaFocusBorder
 import com.jamsholat2.android.ui.components.aquaButtonColors
 import com.jamsholat2.android.ui.components.aquaOutlinedButtonColors
+import com.jamsholat2.android.ui.components.UnsplashGalleryScreen
 import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -123,6 +125,7 @@ fun SettingsScreen(
         }
     }
     var showFilePicker by remember { mutableStateOf(false) }
+    var showUnsplashGallery by remember { mutableStateOf(false) }
     var filePickerType by remember { mutableStateOf("all") }
     var externalMedia by remember { mutableStateOf<List<BackgroundFileManager.ExternalMedia>>(emptyList()) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
@@ -168,8 +171,9 @@ fun SettingsScreen(
         backButtonFocused = false
     }
 
-    // Handle back for settings: file picker handled by dialog's onDismissRequest
-    BackHandler(enabled = !showFilePicker) {
+    // Handle back for settings: file picker handled by dialog's onDismissRequest,
+    // Unsplash gallery has its own BackHandler (composed later, so higher priority)
+    BackHandler(enabled = !showFilePicker && !showUnsplashGallery) {
         navigateBack()
     }
 
@@ -738,7 +742,7 @@ fun SettingsScreen(
                                 SettingsSection(title = "Latar Belakang") {
                                     //Text("Video & Gambar Latar", style = MaterialTheme.typography.titleMedium)
                                     Text(
-                                        "Pilih video/gambar dari penyimpanan. File akan dicopy ke folder internal (videos/images) dan ditampilkan bergantian. Video sesuai durasi, gambar 10 detik. Saat waktu sholat latar akan dinonaktifkan untuk kekhusukan sholat.",
+                                        "Pilih video/gambar dari penyimpanan, atau unduh gambar gratis dari Unsplash (masuk ke folder Download, lalu pilih dengan tombol di bawah). File akan dicopy ke folder internal (videos/images) dan ditampilkan bergantian. Video sesuai durasi, gambar 10 detik. Saat waktu sholat latar akan dinonaktifkan untuk kekhusukan sholat.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray
                                     )
@@ -826,6 +830,25 @@ fun SettingsScreen(
                                             Icon(Icons.Default.Image, contentDescription = null)
                                             Spacer(Modifier.width(4.dp))
                                             Text("Gambar", fontSize = 13.sp)
+                                        }
+                                    }
+                                    Spacer(Modifier.height(8.dp))
+                                    run {
+                                        val unsplashInteraction = remember { MutableInteractionSource() }
+                                        OutlinedButton(
+                                            onClick = { showUnsplashGallery = true },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            interactionSource = unsplashInteraction,
+                                            colors = aquaOutlinedButtonColors(unsplashInteraction)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CloudDownload,
+                                                contentDescription = null,
+                                                tint = Color(0xFF90CAF9),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("Unduh Gambar Gratis dari Unsplash", fontSize = 12.sp)
                                         }
                                     }
                                     Spacer(Modifier.height(8.dp))
@@ -975,6 +998,9 @@ fun SettingsScreen(
                     }) { Text("Refresh") }
                 }
             )
+        }
+        if (showUnsplashGallery) {
+            UnsplashGalleryScreen(onClose = { showUnsplashGallery = false })
         }
     }
 }
