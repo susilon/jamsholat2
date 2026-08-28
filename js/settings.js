@@ -419,7 +419,7 @@
       };
 
       if (label === 'Dzuhur') {
-        var jumatVal = parseInt($('#form-jumat-duration').val(), 10);
+        var jumatVal = parseInt($('#form-jumat-duration').val(), 45);
         timeSettings.jumatDuration = isNaN(jumatVal) ? 45 : jumatVal;
       }
 
