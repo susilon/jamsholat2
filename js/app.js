@@ -103,6 +103,11 @@ if (typeof global.backgroundEnabled === 'undefined') {
     saveConfig(global);
 }
 
+if (global.prayer && global.prayer.Dzuhur && typeof global.prayer.Dzuhur.jumatDuration === 'undefined') {
+    global.prayer.Dzuhur.jumatDuration = global.prayer.Dzuhur.duration || 10;
+    saveConfig(global);
+}
+
 function applyBackgroundEnabled() {
     var videoPlayer = document.getElementById('bg-video');
     var imagePlayer = document.getElementById('bg-image');
@@ -162,7 +167,7 @@ function buildDefaultConfig() {
         prayer: {
             Subuh: { label: 'Subuh', iqomah: 5, adjustment: 2, duration: 5 },
             Terbit: { label: 'Terbit', iqomah: 5, adjustment: 2, duration: 0 },
-            Dzuhur: { label: 'Dzuhur', iqomah: 5, adjustment: 2, duration: 10 },
+            Dzuhur: { label: 'Dzuhur', iqomah: 5, adjustment: 2, duration: 10, jumatDuration: 40 },
             Ashar: { label: 'Ashar', iqomah: 5, adjustment: 2, duration: 10 },
             Maghrib: { label: 'Maghrib', iqomah: 5, adjustment: 2, duration: 5 },
             Isya: { label: 'Isya', iqomah: 5, adjustment: 2, duration: 10 }
@@ -536,24 +541,44 @@ function setPrayerTimes() {
         currentTimeBox.find('.time-data').css('background-color', 'rgba(0,0,0,0)');
     }
 
-    var currentIqomahTime = getPrayer(current).iqomah;
-    updateIqomahCountdown(timepassed, current, currentIqomahTime);
-    if (Math.floor(timepassed / 1000 / 60) === currentIqomahTime) {
-        if (current !== 'sunrise') {
-            if (!global.isiqomah) {
-                global.isiqomah = true;
-                $('.hide-onpray').css('display', 'none');
-                playBeep('m');
-                setScrollingText(global.scrollingdata);
-            } else {
-                global.isadhan = false;
-                console.log('waktunya iqomah ' + current);
+    var rawIqomahTime = getPrayer(current) ? getPrayer(current).iqomah : 0;
+    var isJumatDhuhr = global.isjumat && current === 'dhuhr';
+    var effectiveIqomahTime = isJumatDhuhr ? 0 : rawIqomahTime;
+    if (!isJumatDhuhr) {
+        updateIqomahCountdown(timepassed, current, effectiveIqomahTime);
+        if (Math.floor(timepassed / 1000 / 60) === effectiveIqomahTime) {
+            if (current !== 'sunrise') {
+                if (!global.isiqomah) {
+                    global.isiqomah = true;
+                    $('.hide-onpray').css('display', 'none');
+                    playBeep('m');
+                    setScrollingText(global.scrollingdata);
+                } else {
+                    global.isadhan = false;
+                    console.log('waktunya iqomah ' + current);
+                }
             }
+        }
+    } else {
+        if (global.iqomahCountdownActive) {
+            global.iqomahCountdownActive = false;
+            tickerInfo();
         }
     }
 
-    var currentPrayDuration = currentIqomahTime + getPrayer(current).duration;
-    if ((Math.floor(timepassed / 1000 / 60) > currentIqomahTime) && Math.floor(timepassed / 1000 / 60) <= currentPrayDuration) {
+    var prayerConfig = getPrayer(current);
+    var effectiveDuration = prayerConfig ? prayerConfig.duration : 0;
+    if (isJumatDhuhr && prayerConfig && typeof prayerConfig.jumatDuration !== 'undefined' && prayerConfig.jumatDuration !== null && prayerConfig.jumatDuration !== '') {
+        var parsedJumatDuration = parseInt(prayerConfig.jumatDuration, 10);
+        if (!isNaN(parsedJumatDuration)) {
+            effectiveDuration = parsedJumatDuration;
+        }
+    }
+    var currentPrayDuration = effectiveIqomahTime + (parseInt(effectiveDuration, 10) || 0);
+    var isPrayingWindow = isJumatDhuhr
+        ? (Math.floor(timepassed / 1000 / 60) >= 0 && Math.floor(timepassed / 1000 / 60) <= currentPrayDuration)
+        : (Math.floor(timepassed / 1000 / 60) > effectiveIqomahTime && Math.floor(timepassed / 1000 / 60) <= currentPrayDuration);
+    if (isPrayingWindow) {
         console.log('waktunya sholat ' + current);
         if (current !== 'sunrise') {
             if (global.isiqomah || !global.ispraying) {

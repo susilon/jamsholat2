@@ -389,11 +389,22 @@
     var form = '<form><div class="form-group form-label"><label for="form">Label ' + label + '</label><input type="text" class="form-control" id="form-label" value="' + config.label + '"></div>';
 
     if (label !== 'Terbit') {
-      form += '<div class="form-group form-iqomah"><label for="form">Waktu Iqomah (menit, setelah adzan)</label><input type="text" class="form-control" id="form-iqomah" value="' + config.iqomah + '"></div>';
+      form += '<div class="form-group form-iqomah"><label for="form">Waktu Iqomah (menit, setelah adzan)</label><input type="text" class="form-control" id="form-iqomah" value="' + config.iqomah + '">';
+      if (label === 'Dzuhur') {
+        form += '<small class="form-text text-muted">Diabaikan saat Jumat &ndash; langsung masuk waktu sholat tanpa iqomah.</small>';
+      }
+      form += '</div>';
     }
 
     form += '<div class="form-group form-adjustment"><label for="form">Adjustment Waktu (menit)</label><input type="text" class="form-control" id="form-adjustment" value="' + config.adjustment + '"></div>' +
-      '<div class="form-group form-adjustment"><label for="form">Durasi Sholat (menit, layar off)</label><input type="text" class="form-control" id="form-duration" value="' + config.duration + '"></div></form>';
+      '<div class="form-group form-adjustment"><label for="form">Durasi Sholat (menit, layar off)</label><input type="text" class="form-control" id="form-duration" value="' + config.duration + '"></div>';
+
+    if (label === 'Dzuhur') {
+      var jumatDurationVal = typeof config.jumatDuration !== 'undefined' && config.jumatDuration !== null && config.jumatDuration !== '' ? config.jumatDuration : config.duration;
+      form += '<div class="form-group form-jumat-duration"><label for="form">Durasi Sholat Jumat (menit, layar off)</label><input type="text" class="form-control" id="form-jumat-duration" value="' + jumatDurationVal + '"><small class="form-text text-muted">Khusus hari Jumat, tanpa iqomah &mdash; layar off langsung setelah adzan selama durasi ini.</small></div>';
+    }
+
+    form += '</form>';
 
     modal.find('.modal-title').text('Setting Waktu ' + label);
     modal.find('.modal-body').html(form);
@@ -406,6 +417,11 @@
         adjustment: parseInt($('#form-adjustment').val(), 10) || 0,
         duration: parseInt($('#form-duration').val(), 10) || 0
       };
+
+      if (label === 'Dzuhur') {
+        var jumatVal = parseInt($('#form-jumat-duration').val(), 10);
+        timeSettings.jumatDuration = isNaN(jumatVal) ? 45 : jumatVal;
+      }
 
       global.prayer[label] = timeSettings;
       saveSettings();
