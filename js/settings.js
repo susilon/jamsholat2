@@ -92,11 +92,13 @@
 
     listGroup += '</ul>';
 
-    return `<strong>Background</strong><br>
+    var backgroundEnabledChecked = global.backgroundEnabled !== false ? 'checked' : '';
+    return `<strong>Background</strong>
+    <div class="form-check ml-2" style="display:inline-block;"><input class="form-check-input" type="checkbox" id="background-enabled" ${backgroundEnabledChecked}><label class="form-check-label" for="background-enabled">Enable Background</label></div><br>
     Latar belakang video atau gambar dapat dicari di <a href='https://www.pexels.com/search/videos/mosques/?orientation=landscape' target='_blank'>Pexels.com</a>, pilih gambar/video kemudian download dengan ukuran SD agar tidak menghabiskan memory,<br>
-    kemudian browse file yang sudah didowload untuk ditambahkan kedalam list background.<br><br>
-      ${ listGroup }<div class="form-group mt-2"><label for="new-background-file">Telusuri video atau gambar lokal</label><input type="file" class="form-control-file" id="new-background-file" accept="video/*,image/*"><small class="form-text text-muted">File yang dipilih tetap tersimpan di browser ini dan tidak diunggah.</small></div><br>
-      <button class="btn btn-sm btn-primary btn-background-add">Tambah Background dari URL</button></small><br><small>atau masukkan url gambar/video dari internet.</small>`;
+     kemudian browse file yang sudah didowload untuk ditambahkan kedalam list background.<br><br>
+       ${ listGroup }<div class="form-group mt-2"><label for="new-background-file">Telusuri video atau gambar lokal</label><input type="file" class="form-control-file" id="new-background-file" accept="video/*,image/*"><small class="form-text text-muted">File yang dipilih tetap tersimpan di browser ini dan tidak diunggah.</small></div><br>
+       <button class="btn btn-sm btn-primary btn-background-add">Tambah Background dari URL</button></small><br><small>atau masukkan url gambar/video dari internet.</small>`;
   }
 
   function applyScreenZoom(value) {
@@ -251,9 +253,16 @@
       global.fajrAngle = $('#form-fajrAngle').val();
       global.ishaAngle = $('#form-ishaAngle').val();
       global.imsak = Number($('#form-imsak').val());
+      var backgroundEnabledEl = modal.find('#background-enabled');
+      if (backgroundEnabledEl.length) {
+        global.backgroundEnabled = backgroundEnabledEl.is(':checked');
+      }
       originalBeepVol = global.beep.beepVolume;
       applyScreenZoom(global.screenZoom);
       saveSettings();
+      if (backgroundEnabledEl.length && typeof window.applyBackgroundEnabled === 'function') {
+        window.applyBackgroundEnabled();
+      }
 
       if (typeof callback === 'function') {
         callback();
@@ -324,6 +333,14 @@
       }
       modal.find('#pills-videolist').html(generateVideoList());
       modal.find('.list-new-background').hide();
+    });
+
+    modal.on('change', '#background-enabled', function () {
+      global.backgroundEnabled = $(this).is(':checked');
+      saveSettings();
+      if (typeof window.applyBackgroundEnabled === 'function') {
+        window.applyBackgroundEnabled();
+      }
     });
 
     modal.find('.list-new-background').hide();

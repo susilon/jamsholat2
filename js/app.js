@@ -98,6 +98,46 @@ if (global === null) {
     saveConfig(global);
 }
 
+if (typeof global.backgroundEnabled === 'undefined') {
+    global.backgroundEnabled = true;
+    saveConfig(global);
+}
+
+function applyBackgroundEnabled() {
+    var videoPlayer = document.getElementById('bg-video');
+    var imagePlayer = document.getElementById('bg-image');
+    if (!global.backgroundEnabled) {
+        if (videoPlayer) {
+            try { videoPlayer.pause(); } catch (e) {}
+            videoPlayer.style.display = 'none';
+            videoPlayer.style.opacity = '0';
+            videoPlayer.onended = null;
+            videoPlayer.onerror = null;
+            videoPlayer.oncanplay = null;
+            videoPlayer.removeAttribute('src');
+            try { videoPlayer.load(); } catch (e) {}
+        }
+        if (imagePlayer) {
+            imagePlayer.onload = null;
+            imagePlayer.onerror = null;
+            imagePlayer.style.display = 'none';
+            imagePlayer.style.opacity = '0';
+            if (imagePlayer.src && imagePlayer.src.indexOf('blob:') === 0) {
+                try { URL.revokeObjectURL(imagePlayer.src); } catch (e) {}
+            }
+            imagePlayer.removeAttribute('src');
+        }
+    } else {
+        var videoHidden = !videoPlayer || videoPlayer.style.display === 'none' || !videoPlayer.getAttribute('src');
+        var imageHidden = !imagePlayer || imagePlayer.style.display === 'none' || !imagePlayer.getAttribute('src');
+        if (videoHidden && imageHidden) {
+            window.location.reload();
+        }
+    }
+}
+
+window.applyBackgroundEnabled = applyBackgroundEnabled;
+
 function buildDefaultConfig() {
     return {
         locale: 'id',
@@ -173,7 +213,8 @@ function buildDefaultConfig() {
             beepType: 'square',
             beepDuration: 150
         },
-        videolist: ['tawaf.mp4']
+        videolist: ['tawaf.mp4'],
+        backgroundEnabled: true
     };
 }
 
@@ -665,6 +706,9 @@ function initializeDisplay() {
     }
 
     function showNextBackground() {
+        if (global.backgroundEnabled === false) {
+            return;
+        }
         clearTimeout(imageTimer);
         clearTimeout(fadeTimer);
         if (!backgroundItems.length) {
@@ -756,7 +800,28 @@ function initializeDisplay() {
         });
     }
 
-    showNextBackground();
+    if (global.backgroundEnabled === false) {
+        if (videoPlayer) {
+            try { videoPlayer.pause(); } catch (e) {}
+            videoPlayer.style.display = 'none';
+            videoPlayer.style.opacity = '0';
+            videoPlayer.onended = null;
+            videoPlayer.onerror = null;
+            videoPlayer.oncanplay = null;
+            videoPlayer.removeAttribute('src');
+            try { videoPlayer.load(); } catch (e) {}
+        }
+        if (imagePlayer) {
+            imagePlayer.style.display = 'none';
+            imagePlayer.style.opacity = '0';
+            imagePlayer.onload = null;
+            imagePlayer.onerror = null;
+            imagePlayer.removeAttribute('src');
+        }
+        releaseCurrentObjectUrl();
+    } else {
+        showNextBackground();
+    }
 
     setScrollingText(global.scrollingdata);
     tickerInfo();
